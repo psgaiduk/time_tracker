@@ -17,6 +17,7 @@ namespace TimeTracker.Classic.Tests
                 AwaitingDecision_ContinuesCountingWorkUntilRest();
                 EndBreak_ShortBreak_StartsWorkImmediately();
                 TrayIcon_Work_ShowsContinuousMinutes();
+                FifthWork_Rest_StartsLongBreakAfterDecision();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -91,6 +92,30 @@ namespace TimeTracker.Classic.Tests
             AssertEqual("47", TrayIconRenderer.GetText(state, stats), "Tray icon work text");
             state = new TimerState(TimerPhase.ShortBreak, TimeSpan.FromMinutes(3), 0);
             AssertEqual(String.Empty, TrayIconRenderer.GetText(state, stats), "Tray icon break text");
+        }
+
+        private static void FifthWork_Rest_StartsLongBreakAfterDecision()
+        {
+            TimerSession session = new TimerSession(TimerRules.Test());
+            DateTime now = new DateTime(2026, 8, 9, 9, 0, 0);
+            session.StartWork(now);
+            for (int interval = 1; interval <= 5; interval++)
+            {
+                now = now.AddSeconds(25);
+                session.Advance(now);
+                if (interval < 5)
+                {
+                    session.Rest(now);
+                    now = now.AddSeconds(5);
+                    session.Advance(now);
+                }
+            }
+
+            AssertEqual(TimerPhase.AwaitingBreakDecision, session.GetState(now).Phase, "Fifth work decision phase");
+            AssertEqual(5, session.GetState(now).CompletedWorkIntervals, "Completed count before long break");
+            session.Rest(now);
+            AssertEqual(TimerPhase.LongBreak, session.GetState(now).Phase, "Long break after rest choice");
+            AssertEqual(TimeSpan.FromSeconds(90), session.GetState(now).Remaining, "Long break duration");
         }
 
         private sealed class FakeClock : IClock

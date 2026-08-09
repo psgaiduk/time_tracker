@@ -29,7 +29,6 @@ namespace TimeTracker.Classic.Application
             TimerPhase before = State.Phase;
             _session.Advance(_clock.Now);
             TimerPhase after = _session.GetState(_clock.Now).Phase;
-            if (before == TimerPhase.Work && after == TimerPhase.LongBreak) EndWork(_clock.Now, true);
             if ((before == TimerPhase.ShortBreak || before == TimerPhase.LongBreak) && after == TimerPhase.Work) BeginWork(_clock.Now, true);
             Publish();
         }

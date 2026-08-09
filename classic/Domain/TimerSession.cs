@@ -35,16 +35,8 @@ namespace TimeTracker.Classic.Domain
             if (_phase == TimerPhase.Work)
             {
                 _completedWorkIntervals++;
-                if (_completedWorkIntervals >= _rules.WorkIntervalsBeforeLongBreak)
-                {
-                    _completedWorkIntervals = 0;
-                    Start(TimerPhase.LongBreak, _rules.LongBreakDuration, now);
-                }
-                else
-                {
-                    _phase = TimerPhase.AwaitingBreakDecision;
-                    _deadline = null;
-                }
+                _phase = TimerPhase.AwaitingBreakDecision;
+                _deadline = null;
             }
             else if (_phase == TimerPhase.ShortBreak || _phase == TimerPhase.LongBreak)
             {
@@ -61,7 +53,15 @@ namespace TimeTracker.Classic.Domain
         internal void Rest(DateTime now)
         {
             EnsureDecision();
-            Start(TimerPhase.ShortBreak, _rules.ShortBreakDuration, now);
+            if (_completedWorkIntervals >= _rules.WorkIntervalsBeforeLongBreak)
+            {
+                _completedWorkIntervals = 0;
+                Start(TimerPhase.LongBreak, _rules.LongBreakDuration, now);
+            }
+            else
+            {
+                Start(TimerPhase.ShortBreak, _rules.ShortBreakDuration, now);
+            }
         }
 
         internal void EndBreak(DateTime now)
