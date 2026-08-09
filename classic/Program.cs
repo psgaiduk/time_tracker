@@ -19,7 +19,7 @@ namespace TimeTracker.Classic
 #else
             TimerRules rules = TimerRules.Default();
 #endif
-            TimerCoordinator coordinator = new TimerCoordinator(new SystemClock(), rules);
+            TimerCoordinator coordinator = new TimerCoordinator(new SystemClock(), rules, new CsvWorkHistoryStore());
             System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, new PortableSettingsStore(), new StartupRegistration()));
         }
     }

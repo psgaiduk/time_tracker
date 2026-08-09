@@ -13,6 +13,7 @@ namespace TimeTracker.Classic.Presentation
         private readonly StartupRegistration _startup;
         private readonly NotifyIcon _trayIcon;
         private readonly MenuItem _statusItem;
+        private readonly MenuItem _statsItem;
         private readonly Timer _timer;
         private readonly BreakOverlayForm _overlay;
         private readonly AppSettings _settings;
@@ -29,6 +30,8 @@ namespace TimeTracker.Classic.Presentation
             ContextMenu menu = new ContextMenu();
             _statusItem = new MenuItem("Начать работу", delegate { StartWork(); });
             menu.MenuItems.Add(_statusItem);
+            _statsItem = new MenuItem("Сегодня: 00:00:00") { Enabled = false };
+            menu.MenuItems.Add(_statsItem);
             menu.MenuItems.Add("Настройки", delegate { ShowSettings(); });
             menu.MenuItems.Add("-");
             menu.MenuItems.Add("Выход", delegate { Exit(); });
@@ -53,7 +56,13 @@ namespace TimeTracker.Classic.Presentation
             string status = TrayStatusText.Format(_coordinator.State);
             _statusItem.Text = status;
             _statusItem.Enabled = _coordinator.State.Phase == TimeTracker.Classic.Domain.TimerPhase.Idle;
+            _statsItem.Text = "Без отдыха: " + Format(_coordinator.Stats.ContinuousWork) + " | Сегодня: " + Format(_coordinator.Stats.WorkedToday);
             _trayIcon.Text = "Time Tracker: " + status;
+        }
+
+        private static string Format(TimeSpan value)
+        {
+            return String.Format("{0:00}:{1:00}:{2:00}", (int)value.TotalHours, value.Minutes, value.Seconds);
         }
 
         private void ShowSettings()

@@ -1,6 +1,7 @@
 using System;
 using TimeTracker.Classic.Domain;
 using TimeTracker.Classic.Presentation;
+using TimeTracker.Classic.Application;
 
 namespace TimeTracker.Classic.Tests
 {
@@ -13,6 +14,7 @@ namespace TimeTracker.Classic.Tests
                 TestRulesUseSeconds();
                 WorkCompletesByDeadline();
                 TrayStatus_Work_ShowsRemainingTime();
+                AwaitingDecision_ContinuesCountingWorkUntilRest();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -46,6 +48,36 @@ namespace TimeTracker.Classic.Tests
         {
             TimerState state = new TimerState(TimerPhase.Work, TimeSpan.FromMinutes(24).Add(TimeSpan.FromSeconds(59)), 0);
             AssertEqual("Работа — 24:59", TrayStatusText.Format(state), "Tray work status");
+        }
+
+        private static void AwaitingDecision_ContinuesCountingWorkUntilRest()
+        {
+            DateTime start = new DateTime(2026, 8, 9, 9, 0, 0);
+            FakeClock clock = new FakeClock(start);
+            FakeHistoryStore history = new FakeHistoryStore();
+            TimerCoordinator coordinator = new TimerCoordinator(clock, TimerRules.Test(), history);
+            coordinator.Start();
+            clock.Now = start.AddSeconds(35);
+            coordinator.Tick();
+            AssertEqual(TimeSpan.FromSeconds(35), coordinator.Stats.CurrentPeriod, "Current period during decision");
+            AssertEqual(TimeSpan.FromSeconds(35), coordinator.Stats.ContinuousWork, "Continuous work during decision");
+            AssertEqual(TimeSpan.FromSeconds(35), coordinator.Stats.WorkedToday, "Today during decision");
+            coordinator.Rest();
+            AssertEqual(TimeSpan.Zero, coordinator.Stats.ContinuousWork, "Continuous work after rest");
+            AssertEqual(TimeSpan.FromSeconds(35), history.Total, "Saved work duration");
+        }
+
+        private sealed class FakeClock : IClock
+        {
+            internal FakeClock(DateTime now) { Now = now; }
+            public DateTime Now { get; set; }
+        }
+
+        private sealed class FakeHistoryStore : IWorkHistoryStore
+        {
+            internal TimeSpan Total;
+            public void Add(DateTime startedAt, DateTime finishedAt) { Total += finishedAt - startedAt; }
+            public TimeSpan GetTotal(DateTime day) { return Total; }
         }
 
         private static void AssertEqual(object expected, object actual, string name)
