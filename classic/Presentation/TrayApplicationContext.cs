@@ -24,6 +24,7 @@ namespace TimeTracker.Classic.Presentation
             _startup = startup;
             _settings = settingsStore.Load();
             _overlay = new BreakOverlayForm(coordinator);
+            _overlay.ApplyCaptureSetting(_settings.HideOverlayFromCapture);
 
             ContextMenu menu = new ContextMenu();
             _statusItem = new MenuItem("Начать работу", delegate { StartWork(); });

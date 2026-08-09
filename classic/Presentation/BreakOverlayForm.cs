@@ -15,6 +15,7 @@ namespace TimeTracker.Classic.Presentation
         private readonly Label _remaining;
         private readonly Button _skip;
         private readonly Button _rest;
+        private bool _excludeFromCapture;
 
         internal BreakOverlayForm(TimerCoordinator coordinator)
         {
@@ -40,7 +41,26 @@ namespace TimeTracker.Classic.Presentation
 
         internal void ApplyCaptureSetting(bool enabled)
         {
-            if (IsHandleCreated) SetWindowDisplayAffinity(Handle, enabled ? WdaExcludeFromCapture : 0);
+            _excludeFromCapture = enabled;
+            ApplyDisplayAffinity();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            ApplyDisplayAffinity();
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            ApplyDisplayAffinity();
+        }
+
+        private void ApplyDisplayAffinity()
+        {
+            if (!IsHandleCreated) return;
+            SetWindowDisplayAffinity(Handle, _excludeFromCapture ? WdaExcludeFromCapture : 0);
         }
 
         private void UpdateState()
