@@ -1,0 +1,20 @@
+name: Windows build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore
+        run: dotnet restore TimeTracker.sln
+      - name: Test
+        run: dotnet test TimeTracker.sln --no-restore --configuration Release
+      - name: Build portable app
+        run: dotnet publish src/TimeTracker.App/TimeTracker.App.csproj --no-restore --configuration Release --runtime win-x64 --self-contained true -p:WindowsAppSDKSelfContained=true -o artifacts/portable/win-x64
