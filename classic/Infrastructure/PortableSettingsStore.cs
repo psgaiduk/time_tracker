@@ -23,6 +23,7 @@ namespace TimeTracker.Classic.Infrastructure
             {
                 string[] pair = line.Split(new[] { '=' }, 2);
                 if (pair.Length != 2) continue;
+                if (pair[0] == "WorkSummaryUrl") { result.WorkSummaryUrl = pair[1]; continue; }
                 bool value;
                 if (!Boolean.TryParse(pair[1], out value)) continue;
                 if (pair[0] == "HideOverlayFromCapture") result.HideOverlayFromCapture = value;
@@ -35,6 +36,7 @@ namespace TimeTracker.Classic.Infrastructure
                 if (pair[0] == "Friday") result.Friday = value;
                 if (pair[0] == "Saturday") result.Saturday = value;
                 if (pair[0] == "Sunday") result.Sunday = value;
+                if (pair[0] == "WorkSummaryEnabled") result.WorkSummaryEnabled = value;
             }
             return result;
         }
@@ -51,7 +53,9 @@ namespace TimeTracker.Classic.Infrastructure
                 "Thursday=" + settings.Thursday,
                 "Friday=" + settings.Friday,
                 "Saturday=" + settings.Saturday,
-                "Sunday=" + settings.Sunday
+                "Sunday=" + settings.Sunday,
+                "WorkSummaryEnabled=" + settings.WorkSummaryEnabled,
+                "WorkSummaryUrl=" + (settings.WorkSummaryUrl ?? String.Empty)
             });
         }
     }

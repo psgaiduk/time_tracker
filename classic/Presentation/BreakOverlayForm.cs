@@ -11,6 +11,7 @@ namespace TimeTracker.Classic.Presentation
     {
         private const uint WdaExcludeFromCapture = 0x11;
         private readonly TimerCoordinator _coordinator;
+        private readonly AppSettings _settings;
         private readonly Label _message;
         private readonly Label _remaining;
         private readonly Label _continuous;
@@ -18,11 +19,14 @@ namespace TimeTracker.Classic.Presentation
         private readonly Button _skip;
         private readonly Button _rest;
         private readonly Button _endBreak;
+        private readonly Button _continueToBreak;
+        private readonly LinkLabel _summaryLink;
         private bool _excludeFromCapture;
 
-        internal BreakOverlayForm(TimerCoordinator coordinator)
+        internal BreakOverlayForm(TimerCoordinator coordinator, AppSettings settings)
         {
             _coordinator = coordinator;
+            _settings = settings;
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
             TopMost = true;
@@ -36,13 +40,22 @@ namespace TimeTracker.Classic.Presentation
             _skip = new Button { Width = 100, Height = 36, Text = "Пропустить", Anchor = AnchorStyles.Top | AnchorStyles.Right };
             _rest = new Button { Width = 100, Height = 36, Text = "Отдыхать", Anchor = AnchorStyles.Top | AnchorStyles.Right };
             _endBreak = new Button { Width = 150, Height = 36, Text = "Завершить отдых", Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            _continueToBreak = new Button { Width = 160, Height = 36, Text = "Перейти к отдыху", Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            _summaryLink = new LinkLabel { Left = 205, Top = 0, Width = 590, Height = 64, TextAlign = ContentAlignment.MiddleLeft, LinkColor = Color.White, ActiveLinkColor = Color.Yellow, BackColor = Color.Transparent };
             _skip.Location = new Point(ClientSize.Width - 220, 14);
             _rest.Location = new Point(ClientSize.Width - 110, 14);
             _endBreak.Location = new Point(ClientSize.Width - 160, 14);
+            _continueToBreak.Location = new Point(ClientSize.Width - 170, 14);
             _skip.Click += delegate { _coordinator.Skip(); };
             _rest.Click += delegate { _coordinator.Rest(); };
             _endBreak.Click += delegate { _coordinator.EndBreak(); };
-            Controls.AddRange(new Control[] { _message, _remaining, _continuous, _today, _skip, _rest, _endBreak });
+            _continueToBreak.Click += delegate { _coordinator.CompleteWorkSummary(); };
+            _summaryLink.LinkClicked += delegate
+            {
+                try { System.Diagnostics.Process.Start(_settings.WorkSummaryUrl); }
+                catch (Exception error) { MessageBox.Show("Не удалось открыть ссылку:\n" + error.Message, "Time Tracker"); }
+            };
+            Controls.AddRange(new Control[] { _message, _remaining, _continuous, _today, _summaryLink, _skip, _rest, _endBreak, _continueToBreak });
             _coordinator.StateChanged += delegate { UpdateState(); };
             UpdateState();
         }
@@ -81,24 +94,49 @@ namespace TimeTracker.Classic.Presentation
             _skip.Visible = state.Phase == TimerPhase.AwaitingBreakDecision;
             _rest.Visible = state.Phase == TimerPhase.AwaitingBreakDecision;
             _endBreak.Visible = state.Phase == TimerPhase.ShortBreak || state.Phase == TimerPhase.LongBreak;
-            if (state.Phase == TimerPhase.AwaitingBreakDecision)
+            _continueToBreak.Visible = state.Phase == TimerPhase.WorkSummary;
+            _summaryLink.Visible = state.Phase == TimerPhase.WorkSummary && !String.IsNullOrWhiteSpace(_settings.WorkSummaryUrl);
+            if (state.Phase == TimerPhase.WorkSummary)
             {
+                BackColor = Color.RoyalBlue;
+                _message.Text = _summaryLink.Visible ? "Заполни итоги работы:" : "Заполни итоги работы";
+                _message.Width = _summaryLink.Visible ? 190 : 250;
+                _summaryLink.Text = _settings.WorkSummaryUrl;
+                _remaining.Visible = false;
+                _continuous.Visible = false;
+                _today.Visible = false;
+                Show();
+            }
+            else if (state.Phase == TimerPhase.AwaitingBreakDecision)
+            {
+                RestoreStatisticsVisibility();
                 BackColor = Color.Firebrick;
                 _message.Text = "Рабочий интервал завершён";
                 Show();
             }
             else if (state.Phase == TimerPhase.ShortBreak || state.Phase == TimerPhase.LongBreak)
             {
+                RestoreStatisticsVisibility();
                 BackColor = Color.SeaGreen;
                 _message.Text = state.Phase == TimerPhase.LongBreak ? "Большой перерыв" : "Короткий перерыв";
                 Show();
             }
             else
             {
+                RestoreStatisticsVisibility();
                 BackColor = Color.FromArgb(51, 65, 85);
                 _message.Text = "Работа";
                 Hide();
             }
+        }
+
+        private void RestoreStatisticsVisibility()
+        {
+            _message.Height = 64;
+            _message.Width = 250;
+            _remaining.Visible = true;
+            _continuous.Visible = true;
+            _today.Visible = true;
         }
 
         private static string Format(TimeSpan value)

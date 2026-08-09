@@ -1,3 +1,5 @@
+using System;
+
 namespace TimeTracker.Classic.Application
 {
     internal sealed class AppSettings
@@ -8,6 +10,8 @@ namespace TimeTracker.Classic.Application
             StartWithWindows = false;
             LongBreakEnabled = true;
             Monday = Tuesday = Wednesday = Thursday = Friday = Saturday = Sunday = true;
+            WorkSummaryEnabled = true;
+            WorkSummaryUrl = String.Empty;
         }
 
         internal bool HideOverlayFromCapture { get; set; }
@@ -20,6 +24,8 @@ namespace TimeTracker.Classic.Application
         internal bool Friday { get; set; }
         internal bool Saturday { get; set; }
         internal bool Sunday { get; set; }
+        internal bool WorkSummaryEnabled { get; set; }
+        internal string WorkSummaryUrl { get; set; }
 
         internal bool IsLongBreakAllowed(System.DateTime now)
         {

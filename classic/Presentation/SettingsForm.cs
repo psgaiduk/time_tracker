@@ -11,11 +11,13 @@ namespace TimeTracker.Classic.Presentation
         private readonly CheckBox _startWithWindows;
         private readonly CheckBox _longBreakEnabled;
         private readonly CheckBox[] _longBreakDays;
+        private readonly CheckBox _workSummaryEnabled;
+        private readonly TextBox _workSummaryUrl;
 
         internal SettingsForm(AppSettings settings)
         {
             Text = "Настройки Time Tracker";
-            ClientSize = new Size(430, 215);
+            ClientSize = new Size(430, 295);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -36,9 +38,13 @@ namespace TimeTracker.Classic.Presentation
             {
                 foreach (CheckBox day in _longBreakDays) day.Enabled = _longBreakEnabled.Checked;
             };
-            Button save = new Button { Left = 245, Top = 165, Width = 85, Text = "Сохранить", DialogResult = DialogResult.OK };
-            Button cancel = new Button { Left = 340, Top = 165, Width = 75, Text = "Отмена", DialogResult = DialogResult.Cancel };
-            Controls.AddRange(new Control[] { _hideFromCapture, _startWithWindows, _longBreakEnabled, save, cancel });
+            _workSummaryEnabled = new CheckBox { Left = 20, Top = 158, Width = 350, Text = "Показывать шаг «Заполни итоги работы»", Checked = settings.WorkSummaryEnabled };
+            Label urlLabel = new Label { Left = 40, Top = 190, Width = 80, Text = "Ссылка:" };
+            _workSummaryUrl = new TextBox { Left = 120, Top = 186, Width = 290, Text = settings.WorkSummaryUrl ?? String.Empty, Enabled = settings.WorkSummaryEnabled };
+            _workSummaryEnabled.CheckedChanged += delegate { _workSummaryUrl.Enabled = _workSummaryEnabled.Checked; };
+            Button save = new Button { Left = 245, Top = 245, Width = 85, Text = "Сохранить", DialogResult = DialogResult.OK };
+            Button cancel = new Button { Left = 340, Top = 245, Width = 75, Text = "Отмена", DialogResult = DialogResult.Cancel };
+            Controls.AddRange(new Control[] { _hideFromCapture, _startWithWindows, _longBreakEnabled, _workSummaryEnabled, urlLabel, _workSummaryUrl, save, cancel });
             AcceptButton = save;
             CancelButton = cancel;
         }
@@ -55,6 +61,8 @@ namespace TimeTracker.Classic.Presentation
             settings.Friday = _longBreakDays[4].Checked;
             settings.Saturday = _longBreakDays[5].Checked;
             settings.Sunday = _longBreakDays[6].Checked;
+            settings.WorkSummaryEnabled = _workSummaryEnabled.Checked;
+            settings.WorkSummaryUrl = _workSummaryUrl.Text.Trim();
         }
     }
 }

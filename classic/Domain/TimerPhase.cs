@@ -5,6 +5,7 @@ namespace TimeTracker.Classic.Domain
         Idle,
         Work,
         AwaitingBreakDecision,
+        WorkSummary,
         ShortBreak,
         LongBreak
     }

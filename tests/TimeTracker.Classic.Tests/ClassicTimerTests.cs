@@ -19,6 +19,8 @@ namespace TimeTracker.Classic.Tests
                 TrayIcon_Work_ShowsContinuousMinutes();
                 FifthWork_Rest_StartsLongBreakAfterDecision();
                 FifthWork_LongBreakDisabled_StartsShortBreak();
+                Rest_SummaryPromptEnabled_WaitsBeforeBreak();
+                BreakDeadline_WaitsForExplicitEndBreak();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -109,6 +111,7 @@ namespace TimeTracker.Classic.Tests
                     session.Rest(now);
                     now = now.AddSeconds(5);
                     session.Advance(now);
+                    session.EndBreak(now);
                 }
             }
 
@@ -134,10 +137,38 @@ namespace TimeTracker.Classic.Tests
                     session.Rest(now);
                     now = now.AddSeconds(5);
                     session.Advance(now);
+                    session.EndBreak(now);
                 }
             }
             session.Rest(now);
             AssertEqual(TimerPhase.ShortBreak, session.GetState(now).Phase, "Short break when long break disabled");
+        }
+
+        private static void Rest_SummaryPromptEnabled_WaitsBeforeBreak()
+        {
+            TimerRules rules = TimerRules.Test(delegate(DateTime date) { return true; }, delegate { return true; });
+            TimerSession session = new TimerSession(rules);
+            DateTime now = new DateTime(2026, 8, 10, 9, 0, 0);
+            session.StartWork(now);
+            now = now.AddSeconds(25);
+            session.Advance(now);
+            session.Rest(now);
+            AssertEqual(TimerPhase.WorkSummary, session.GetState(now).Phase, "Summary phase after rest choice");
+            session.CompleteWorkSummary(now);
+            AssertEqual(TimerPhase.ShortBreak, session.GetState(now).Phase, "Break after summary completion");
+        }
+
+        private static void BreakDeadline_WaitsForExplicitEndBreak()
+        {
+            DateTime start = new DateTime(2026, 8, 10, 9, 0, 0);
+            TimerSession session = new TimerSession(TimerRules.Test());
+            session.StartWork(start);
+            session.Advance(start.AddSeconds(25));
+            session.Rest(start.AddSeconds(25));
+            session.Advance(start.AddSeconds(30));
+            AssertEqual(TimerPhase.ShortBreak, session.GetState(start.AddSeconds(30)).Phase, "Break phase at deadline");
+            session.EndBreak(start.AddSeconds(31));
+            AssertEqual(TimerPhase.Work, session.GetState(start.AddSeconds(31)).Phase, "Work after explicit end break");
         }
 
         private sealed class FakeClock : IClock

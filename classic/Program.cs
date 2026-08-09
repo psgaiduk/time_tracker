@@ -17,9 +17,9 @@ namespace TimeTracker.Classic
             ISettingsStore settingsStore = new PortableSettingsStore();
             AppSettings settings = settingsStore.Load();
 #if TEST_TIMER
-            TimerRules rules = TimerRules.Test(settings.IsLongBreakAllowed);
+            TimerRules rules = TimerRules.Test(settings.IsLongBreakAllowed, delegate { return settings.WorkSummaryEnabled; });
 #else
-            TimerRules rules = TimerRules.Default(settings.IsLongBreakAllowed);
+            TimerRules rules = TimerRules.Default(settings.IsLongBreakAllowed, delegate { return settings.WorkSummaryEnabled; });
 #endif
             TimerCoordinator coordinator = new TimerCoordinator(new SystemClock(), rules, new CsvWorkHistoryStore());
             System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, settingsStore, new StartupRegistration(), settings));

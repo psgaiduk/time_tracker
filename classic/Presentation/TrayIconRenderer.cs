@@ -24,6 +24,7 @@ namespace TimeTracker.Classic.Presentation
         {
             Color background = Color.DimGray;
             if (state.Phase == TimerPhase.Work || state.Phase == TimerPhase.AwaitingBreakDecision) background = Color.Firebrick;
+            if (state.Phase == TimerPhase.WorkSummary) background = Color.RoyalBlue;
             if (state.Phase == TimerPhase.ShortBreak || state.Phase == TimerPhase.LongBreak) background = Color.SeaGreen;
 
             using (Bitmap bitmap = new Bitmap(16, 16))

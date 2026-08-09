@@ -26,7 +26,7 @@ namespace TimeTracker.Classic.Presentation
             _settingsStore = settingsStore;
             _startup = startup;
             _settings = settings;
-            _overlay = new BreakOverlayForm(coordinator);
+            _overlay = new BreakOverlayForm(coordinator, settings);
             _overlay.ApplyCaptureSetting(_settings.HideOverlayFromCapture);
 
             ContextMenu menu = new ContextMenu();

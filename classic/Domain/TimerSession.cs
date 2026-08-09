@@ -8,6 +8,7 @@ namespace TimeTracker.Classic.Domain
         private TimerPhase _phase;
         private DateTime? _deadline;
         private int _completedWorkIntervals;
+        private bool _pendingLongBreak;
 
         internal TimerSession(TimerRules rules)
         {
@@ -38,10 +39,6 @@ namespace TimeTracker.Classic.Domain
                 _phase = TimerPhase.AwaitingBreakDecision;
                 _deadline = null;
             }
-            else if (_phase == TimerPhase.ShortBreak || _phase == TimerPhase.LongBreak)
-            {
-                Start(TimerPhase.Work, _rules.WorkDuration, now);
-            }
         }
 
         internal void Skip(DateTime now)
@@ -53,15 +50,22 @@ namespace TimeTracker.Classic.Domain
         internal void Rest(DateTime now)
         {
             EnsureDecision();
-            if (_completedWorkIntervals >= _rules.WorkIntervalsBeforeLongBreak && _rules.IsLongBreakAllowed(now))
+            _pendingLongBreak = _completedWorkIntervals >= _rules.WorkIntervalsBeforeLongBreak && _rules.IsLongBreakAllowed(now);
+            if (_rules.IsSummaryPromptEnabled())
             {
-                _completedWorkIntervals = 0;
-                Start(TimerPhase.LongBreak, _rules.LongBreakDuration, now);
+                _phase = TimerPhase.WorkSummary;
+                _deadline = null;
             }
             else
             {
-                Start(TimerPhase.ShortBreak, _rules.ShortBreakDuration, now);
+                StartPendingBreak(now);
             }
+        }
+
+        internal void CompleteWorkSummary(DateTime now)
+        {
+            if (_phase != TimerPhase.WorkSummary) throw new InvalidOperationException();
+            StartPendingBreak(now);
         }
 
         internal void EndBreak(DateTime now)
@@ -80,6 +84,20 @@ namespace TimeTracker.Classic.Domain
         private void EnsureDecision()
         {
             if (_phase != TimerPhase.AwaitingBreakDecision) throw new InvalidOperationException();
+        }
+
+        private void StartPendingBreak(DateTime now)
+        {
+            if (_pendingLongBreak)
+            {
+                _completedWorkIntervals = 0;
+                Start(TimerPhase.LongBreak, _rules.LongBreakDuration, now);
+            }
+            else
+            {
+                Start(TimerPhase.ShortBreak, _rules.ShortBreakDuration, now);
+            }
+            _pendingLongBreak = false;
         }
     }
 }
