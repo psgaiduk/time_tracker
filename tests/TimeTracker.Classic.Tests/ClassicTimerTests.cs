@@ -1,5 +1,6 @@
 using System;
 using TimeTracker.Classic.Domain;
+using TimeTracker.Classic.Presentation;
 
 namespace TimeTracker.Classic.Tests
 {
@@ -11,6 +12,7 @@ namespace TimeTracker.Classic.Tests
             {
                 TestRulesUseSeconds();
                 WorkCompletesByDeadline();
+                TrayStatus_Work_ShowsRemainingTime();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -38,6 +40,12 @@ namespace TimeTracker.Classic.Tests
             AssertEqual(TimerPhase.Work, session.GetState(start.AddSeconds(24)).Phase, "Phase before deadline");
             session.Advance(start.AddSeconds(25));
             AssertEqual(TimerPhase.AwaitingBreakDecision, session.GetState(start.AddSeconds(25)).Phase, "Phase at deadline");
+        }
+
+        private static void TrayStatus_Work_ShowsRemainingTime()
+        {
+            TimerState state = new TimerState(TimerPhase.Work, TimeSpan.FromMinutes(24).Add(TimeSpan.FromSeconds(59)), 0);
+            AssertEqual("Работа — 24:59", TrayStatusText.Format(state), "Tray work status");
         }
 
         private static void AssertEqual(object expected, object actual, string name)

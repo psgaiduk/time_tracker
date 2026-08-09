@@ -12,6 +12,7 @@ namespace TimeTracker.Classic.Presentation
         private readonly ISettingsStore _settingsStore;
         private readonly StartupRegistration _startup;
         private readonly NotifyIcon _trayIcon;
+        private readonly MenuItem _statusItem;
         private readonly Timer _timer;
         private readonly BreakOverlayForm _overlay;
         private readonly AppSettings _settings;
@@ -25,22 +26,33 @@ namespace TimeTracker.Classic.Presentation
             _overlay = new BreakOverlayForm(coordinator);
 
             ContextMenu menu = new ContextMenu();
-            menu.MenuItems.Add("Начать работу", delegate { StartWork(); });
+            _statusItem = new MenuItem("Начать работу", delegate { StartWork(); });
+            menu.MenuItems.Add(_statusItem);
             menu.MenuItems.Add("Настройки", delegate { ShowSettings(); });
             menu.MenuItems.Add("-");
             menu.MenuItems.Add("Выход", delegate { Exit(); });
             _trayIcon = new NotifyIcon { Icon = SystemIcons.Application, Text = "Time Tracker", ContextMenu = menu, Visible = true };
             _trayIcon.DoubleClick += delegate { StartWork(); };
+            _coordinator.StateChanged += delegate { UpdateTrayStatus(); };
 
             _timer = new Timer { Interval = 250 };
             _timer.Tick += delegate { _coordinator.Tick(); };
             _timer.Start();
+            UpdateTrayStatus();
         }
 
         private void StartWork()
         {
             try { _coordinator.Start(); }
             catch (InvalidOperationException) { }
+        }
+
+        private void UpdateTrayStatus()
+        {
+            string status = TrayStatusText.Format(_coordinator.State);
+            _statusItem.Text = status;
+            _statusItem.Enabled = _coordinator.State.Phase == TimeTracker.Classic.Domain.TimerPhase.Idle;
+            _trayIcon.Text = "Time Tracker: " + status;
         }
 
         private void ShowSettings()
