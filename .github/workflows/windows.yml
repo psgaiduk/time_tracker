@@ -1,4 +1,4 @@
-name: Windows build
+name: Classic Windows build
 
 on:
   push:
@@ -9,12 +9,16 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-      - name: Restore
-        run: dotnet restore TimeTracker.sln
       - name: Test
-        run: dotnet test TimeTracker.sln --no-restore --configuration Release
-      - name: Build portable app
-        run: dotnet publish src/TimeTracker.App/TimeTracker.App.csproj --no-restore --configuration Release --runtime win-x64 --self-contained true -p:WindowsAppSDKSelfContained=true -o artifacts/portable/win-x64
+        shell: powershell
+        run: .\test-classic.ps1
+      - name: Build minute version
+        shell: powershell
+        run: .\build-classic.ps1
+      - name: Build test version
+        shell: powershell
+        run: .\build-classic.ps1 -Test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TimeTracker-classic
+          path: artifacts/classic/*.exe

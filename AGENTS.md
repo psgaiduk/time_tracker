@@ -16,8 +16,6 @@ Time Tracker — локальное tray-приложение для Windows. А
 6. Не использовать синтаксис новее C# 5: file-scoped namespace, records, nullable annotations, interpolated strings, expression-bodied members, `init`, pattern matching и другие новые конструкции запрещены.
 7. Основная целевая среда — Windows 10/11 x64.
 
-Каталоги `src/`, проекты `.NET 10` и `TimeTracker.sln` относятся к предыдущему прототипу WinUI. Не развивать и не включать их в классическую сборку без отдельного запроса пользователя.
-
 ## Архитектура
 
 Использовать Hexagonal Architecture / Ports & Adapters с направлением зависимостей внутрь:
