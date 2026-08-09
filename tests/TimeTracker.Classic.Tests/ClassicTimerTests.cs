@@ -15,6 +15,7 @@ namespace TimeTracker.Classic.Tests
                 WorkCompletesByDeadline();
                 TrayStatus_Work_ShowsRemainingTime();
                 AwaitingDecision_ContinuesCountingWorkUntilRest();
+                EndBreak_ShortBreak_StartsWorkImmediately();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -65,6 +66,21 @@ namespace TimeTracker.Classic.Tests
             coordinator.Rest();
             AssertEqual(TimeSpan.Zero, coordinator.Stats.ContinuousWork, "Continuous work after rest");
             AssertEqual(TimeSpan.FromSeconds(35), history.Total, "Saved work duration");
+        }
+
+        private static void EndBreak_ShortBreak_StartsWorkImmediately()
+        {
+            DateTime start = new DateTime(2026, 8, 9, 9, 0, 0);
+            TimerSession session = new TimerSession(TimerRules.Test());
+            session.StartWork(start);
+            session.Advance(start.AddSeconds(25));
+            session.Rest(start.AddSeconds(25));
+
+            session.EndBreak(start.AddSeconds(27));
+
+            TimerState state = session.GetState(start.AddSeconds(27));
+            AssertEqual(TimerPhase.Work, state.Phase, "Phase after ending break");
+            AssertEqual(TimeSpan.FromSeconds(25), state.Remaining, "Work duration after ending break");
         }
 
         private sealed class FakeClock : IClock

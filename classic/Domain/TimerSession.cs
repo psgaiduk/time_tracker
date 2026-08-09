@@ -64,6 +64,13 @@ namespace TimeTracker.Classic.Domain
             Start(TimerPhase.ShortBreak, _rules.ShortBreakDuration, now);
         }
 
+        internal void EndBreak(DateTime now)
+        {
+            if (_phase != TimerPhase.ShortBreak && _phase != TimerPhase.LongBreak)
+                throw new InvalidOperationException();
+            Start(TimerPhase.Work, _rules.WorkDuration, now);
+        }
+
         private void Start(TimerPhase phase, TimeSpan duration, DateTime now)
         {
             _phase = phase;

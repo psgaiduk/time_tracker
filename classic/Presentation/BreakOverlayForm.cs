@@ -17,6 +17,7 @@ namespace TimeTracker.Classic.Presentation
         private readonly Label _today;
         private readonly Button _skip;
         private readonly Button _rest;
+        private readonly Button _endBreak;
         private bool _excludeFromCapture;
 
         internal BreakOverlayForm(TimerCoordinator coordinator)
@@ -34,11 +35,14 @@ namespace TimeTracker.Classic.Presentation
             _today = new Label { Left = 620, Top = 0, Width = 175, Height = 64, TextAlign = ContentAlignment.MiddleLeft, ForeColor = Color.White };
             _skip = new Button { Width = 100, Height = 36, Text = "Пропустить", Anchor = AnchorStyles.Top | AnchorStyles.Right };
             _rest = new Button { Width = 100, Height = 36, Text = "Отдыхать", Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            _endBreak = new Button { Width = 150, Height = 36, Text = "Завершить отдых", Anchor = AnchorStyles.Top | AnchorStyles.Right };
             _skip.Location = new Point(ClientSize.Width - 220, 14);
             _rest.Location = new Point(ClientSize.Width - 110, 14);
+            _endBreak.Location = new Point(ClientSize.Width - 160, 14);
             _skip.Click += delegate { _coordinator.Skip(); };
             _rest.Click += delegate { _coordinator.Rest(); };
-            Controls.AddRange(new Control[] { _message, _remaining, _continuous, _today, _skip, _rest });
+            _endBreak.Click += delegate { _coordinator.EndBreak(); };
+            Controls.AddRange(new Control[] { _message, _remaining, _continuous, _today, _skip, _rest, _endBreak });
             _coordinator.StateChanged += delegate { UpdateState(); };
             UpdateState();
         }
@@ -76,6 +80,7 @@ namespace TimeTracker.Classic.Presentation
             _today.Text = "Сегодня: " + Format(stats.WorkedToday);
             _skip.Visible = state.Phase == TimerPhase.AwaitingBreakDecision;
             _rest.Visible = state.Phase == TimerPhase.AwaitingBreakDecision;
+            _endBreak.Visible = state.Phase == TimerPhase.ShortBreak || state.Phase == TimerPhase.LongBreak;
             if (state.Phase == TimerPhase.AwaitingBreakDecision)
             {
                 BackColor = Color.Firebrick;
