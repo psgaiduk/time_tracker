@@ -53,7 +53,7 @@ namespace TimeTracker.Classic.Domain
         internal void Rest(DateTime now)
         {
             EnsureDecision();
-            if (_completedWorkIntervals >= _rules.WorkIntervalsBeforeLongBreak)
+            if (_completedWorkIntervals >= _rules.WorkIntervalsBeforeLongBreak && _rules.IsLongBreakAllowed(now))
             {
                 _completedWorkIntervals = 0;
                 Start(TimerPhase.LongBreak, _rules.LongBreakDuration, now);

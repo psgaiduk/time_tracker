@@ -4,11 +4,19 @@ namespace TimeTracker.Classic.Domain
 {
     internal sealed class TimerRules
     {
+        private readonly Func<DateTime, bool> _longBreakAllowed;
+
         internal TimerRules(TimeSpan work, TimeSpan shortBreak, TimeSpan longBreak)
+            : this(work, shortBreak, longBreak, delegate(DateTime date) { return true; })
+        {
+        }
+
+        internal TimerRules(TimeSpan work, TimeSpan shortBreak, TimeSpan longBreak, Func<DateTime, bool> longBreakAllowed)
         {
             WorkDuration = work;
             ShortBreakDuration = shortBreak;
             LongBreakDuration = longBreak;
+            _longBreakAllowed = longBreakAllowed;
         }
 
         internal TimeSpan WorkDuration { get; private set; }
@@ -21,9 +29,21 @@ namespace TimeTracker.Classic.Domain
             return new TimerRules(TimeSpan.FromMinutes(25), TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(90));
         }
 
+        internal static TimerRules Default(Func<DateTime, bool> longBreakAllowed)
+        {
+            return new TimerRules(TimeSpan.FromMinutes(25), TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(90), longBreakAllowed);
+        }
+
         internal static TimerRules Test()
         {
             return new TimerRules(TimeSpan.FromSeconds(25), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(90));
         }
+
+        internal static TimerRules Test(Func<DateTime, bool> longBreakAllowed)
+        {
+            return new TimerRules(TimeSpan.FromSeconds(25), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(90), longBreakAllowed);
+        }
+
+        internal bool IsLongBreakAllowed(DateTime now) { return _longBreakAllowed(now); }
     }
 }

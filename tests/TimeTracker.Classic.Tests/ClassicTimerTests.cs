@@ -18,6 +18,7 @@ namespace TimeTracker.Classic.Tests
                 EndBreak_ShortBreak_StartsWorkImmediately();
                 TrayIcon_Work_ShowsContinuousMinutes();
                 FifthWork_Rest_StartsLongBreakAfterDecision();
+                FifthWork_LongBreakDisabled_StartsShortBreak();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -116,6 +117,27 @@ namespace TimeTracker.Classic.Tests
             session.Rest(now);
             AssertEqual(TimerPhase.LongBreak, session.GetState(now).Phase, "Long break after rest choice");
             AssertEqual(TimeSpan.FromSeconds(90), session.GetState(now).Remaining, "Long break duration");
+        }
+
+        private static void FifthWork_LongBreakDisabled_StartsShortBreak()
+        {
+            TimerRules rules = TimerRules.Test(delegate(DateTime date) { return false; });
+            TimerSession session = new TimerSession(rules);
+            DateTime now = new DateTime(2026, 8, 9, 9, 0, 0);
+            session.StartWork(now);
+            for (int interval = 1; interval <= 5; interval++)
+            {
+                now = now.AddSeconds(25);
+                session.Advance(now);
+                if (interval < 5)
+                {
+                    session.Rest(now);
+                    now = now.AddSeconds(5);
+                    session.Advance(now);
+                }
+            }
+            session.Rest(now);
+            AssertEqual(TimerPhase.ShortBreak, session.GetState(now).Phase, "Short break when long break disabled");
         }
 
         private sealed class FakeClock : IClock

@@ -14,13 +14,15 @@ namespace TimeTracker.Classic
         {
             System.Windows.Forms.Application.EnableVisualStyles();
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+            ISettingsStore settingsStore = new PortableSettingsStore();
+            AppSettings settings = settingsStore.Load();
 #if TEST_TIMER
-            TimerRules rules = TimerRules.Test();
+            TimerRules rules = TimerRules.Test(settings.IsLongBreakAllowed);
 #else
-            TimerRules rules = TimerRules.Default();
+            TimerRules rules = TimerRules.Default(settings.IsLongBreakAllowed);
 #endif
             TimerCoordinator coordinator = new TimerCoordinator(new SystemClock(), rules, new CsvWorkHistoryStore());
-            System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, new PortableSettingsStore(), new StartupRegistration()));
+            System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, settingsStore, new StartupRegistration(), settings));
         }
     }
 }

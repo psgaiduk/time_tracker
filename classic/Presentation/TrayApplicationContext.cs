@@ -20,12 +20,12 @@ namespace TimeTracker.Classic.Presentation
         private Icon _dynamicIcon;
         private string _iconKey;
 
-        internal TrayApplicationContext(TimerCoordinator coordinator, ISettingsStore settingsStore, StartupRegistration startup)
+        internal TrayApplicationContext(TimerCoordinator coordinator, ISettingsStore settingsStore, StartupRegistration startup, AppSettings settings)
         {
             _coordinator = coordinator;
             _settingsStore = settingsStore;
             _startup = startup;
-            _settings = settingsStore.Load();
+            _settings = settings;
             _overlay = new BreakOverlayForm(coordinator);
             _overlay.ApplyCaptureSetting(_settings.HideOverlayFromCapture);
 
