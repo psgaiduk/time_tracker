@@ -9,4 +9,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.0" />
     <ProjectReference Include="..\..\src\TimeTracker.Domain\TimeTracker.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
 </Project>

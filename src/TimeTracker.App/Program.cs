@@ -7,7 +7,7 @@ public static class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        Application.Start(_ =>
+        Microsoft.UI.Xaml.Application.Start(initializationCallbackParams =>
         {
             var context = new Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(
                 Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());

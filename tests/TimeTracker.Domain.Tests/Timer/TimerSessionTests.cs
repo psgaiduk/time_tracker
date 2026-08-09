@@ -7,6 +7,15 @@ public sealed class TimerSessionTests
     private static readonly DateTimeOffset Start = new(2026, 1, 1, 9, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public void TestRules_UseSecondsInsteadOfMinutes()
+    {
+        Assert.Equal(TimeSpan.FromSeconds(25), TimerRules.Test.WorkDuration);
+        Assert.Equal(TimeSpan.FromSeconds(5), TimerRules.Test.ShortBreakDuration);
+        Assert.Equal(TimeSpan.FromSeconds(90), TimerRules.Test.LongBreakDuration);
+        Assert.Equal(5, TimerRules.Test.WorkIntervalsBeforeLongBreak);
+    }
+
+    [Fact]
     public void StartWork_CreatesTwentyFiveMinuteWorkInterval()
     {
         var session = new TimerSession();
@@ -66,10 +75,10 @@ public sealed class TimerSessionTests
     {
         var session = new TimerSession();
         var now = Start;
+        session.StartWork(now);
 
         for (var interval = 0; interval < 5; interval++)
         {
-            session.StartWork(now);
             now = now.AddMinutes(25);
             session.Advance(now);
 

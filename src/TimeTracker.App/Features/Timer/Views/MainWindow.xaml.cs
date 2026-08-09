@@ -9,11 +9,11 @@ public sealed partial class MainWindow : Window
     private readonly DispatcherTimer _timer;
     private readonly BreakOverlayWindow _overlay;
 
-    public MainWindow(TimerCoordinator coordinator)
+    public MainWindow(TimerCoordinator coordinator, BreakOverlayWindow overlay)
     {
         InitializeComponent();
         ViewModel = new TimerViewModel(coordinator);
-        _overlay = new BreakOverlayWindow(coordinator);
+        _overlay = overlay;
         _overlay.Activate();
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += (_, _) => coordinator.Tick();

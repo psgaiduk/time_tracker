@@ -8,15 +8,27 @@ namespace TimeTracker.App.Features.Timer;
 public partial class TimerViewModel : ObservableObject
 {
     private readonly TimerCoordinator _coordinator;
-
-    [ObservableProperty]
+    private int _completedWorkIntervals;
+    private TimerPhase _phase = TimerPhase.Idle;
     private string _remainingText = "25:00";
 
-    [ObservableProperty]
-    private TimerPhase _phase = TimerPhase.Idle;
+    public string RemainingText
+    {
+        get => _remainingText;
+        private set => SetProperty(ref _remainingText, value);
+    }
 
-    [ObservableProperty]
-    private int _completedWorkIntervals;
+    public TimerPhase Phase
+    {
+        get => _phase;
+        private set => SetProperty(ref _phase, value);
+    }
+
+    public int CompletedWorkIntervals
+    {
+        get => _completedWorkIntervals;
+        private set => SetProperty(ref _completedWorkIntervals, value);
+    }
 
     public TimerViewModel(TimerCoordinator coordinator)
     {
