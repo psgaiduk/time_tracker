@@ -17,6 +17,8 @@ namespace TimeTracker.Classic.Presentation
         private readonly Timer _timer;
         private readonly BreakOverlayForm _overlay;
         private readonly AppSettings _settings;
+        private Icon _dynamicIcon;
+        private string _iconKey;
 
         internal TrayApplicationContext(TimerCoordinator coordinator, ISettingsStore settingsStore, StartupRegistration startup)
         {
@@ -58,6 +60,18 @@ namespace TimeTracker.Classic.Presentation
             _statusItem.Enabled = _coordinator.State.Phase == TimeTracker.Classic.Domain.TimerPhase.Idle;
             _statsItem.Text = "Без отдыха: " + Format(_coordinator.Stats.ContinuousWork) + " | Сегодня: " + Format(_coordinator.Stats.WorkedToday);
             _trayIcon.Text = "Time Tracker: " + status;
+            UpdateTrayIcon();
+        }
+
+        private void UpdateTrayIcon()
+        {
+            string key = TrayIconRenderer.GetKey(_coordinator.State, _coordinator.Stats);
+            if (key == _iconKey) return;
+            Icon next = TrayIconRenderer.Create(_coordinator.State, _coordinator.Stats);
+            _trayIcon.Icon = next;
+            if (_dynamicIcon != null) _dynamicIcon.Dispose();
+            _dynamicIcon = next;
+            _iconKey = key;
         }
 
         private static string Format(TimeSpan value)
@@ -82,6 +96,7 @@ namespace TimeTracker.Classic.Presentation
             _timer.Stop();
             _trayIcon.Visible = false;
             _trayIcon.Dispose();
+            if (_dynamicIcon != null) _dynamicIcon.Dispose();
             _overlay.Dispose();
             ExitThread();
         }

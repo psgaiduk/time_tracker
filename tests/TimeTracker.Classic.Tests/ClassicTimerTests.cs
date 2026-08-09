@@ -16,6 +16,7 @@ namespace TimeTracker.Classic.Tests
                 TrayStatus_Work_ShowsRemainingTime();
                 AwaitingDecision_ContinuesCountingWorkUntilRest();
                 EndBreak_ShortBreak_StartsWorkImmediately();
+                TrayIcon_Work_ShowsContinuousMinutes();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -81,6 +82,15 @@ namespace TimeTracker.Classic.Tests
             TimerState state = session.GetState(start.AddSeconds(27));
             AssertEqual(TimerPhase.Work, state.Phase, "Phase after ending break");
             AssertEqual(TimeSpan.FromSeconds(25), state.Remaining, "Work duration after ending break");
+        }
+
+        private static void TrayIcon_Work_ShowsContinuousMinutes()
+        {
+            TimerState state = new TimerState(TimerPhase.Work, TimeSpan.FromMinutes(10), 0);
+            DailyWorkStats stats = new DailyWorkStats(TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(47), TimeSpan.FromMinutes(80));
+            AssertEqual("47", TrayIconRenderer.GetText(state, stats), "Tray icon work text");
+            state = new TimerState(TimerPhase.ShortBreak, TimeSpan.FromMinutes(3), 0);
+            AssertEqual(String.Empty, TrayIconRenderer.GetText(state, stats), "Tray icon break text");
         }
 
         private sealed class FakeClock : IClock
