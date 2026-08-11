@@ -20,14 +20,15 @@ namespace TimeTracker.Classic.Presentation
         private Icon _dynamicIcon;
         private string _iconKey;
 
-        internal TrayApplicationContext(TimerCoordinator coordinator, ISettingsStore settingsStore, StartupRegistration startup, AppSettings settings)
+        internal TrayApplicationContext(TimerCoordinator coordinator, ISettingsStore settingsStore, StartupRegistration startup, AppSettings settings, Action<IntPtr, bool> setVirtualDesktopPinning)
         {
             _coordinator = coordinator;
             _settingsStore = settingsStore;
             _startup = startup;
             _settings = settings;
-            _overlay = new BreakOverlayForm(coordinator, settings);
+            _overlay = new BreakOverlayForm(coordinator, settings, setVirtualDesktopPinning);
             _overlay.ApplyCaptureSetting(_settings.HideOverlayFromCapture);
+            _overlay.ApplyVirtualDesktopSetting(_settings.ShowOverlayOnAllVirtualDesktops);
 
             ContextMenu menu = new ContextMenu();
             _statusItem = new MenuItem("Начать работу", delegate { StartWork(); });
@@ -88,6 +89,7 @@ namespace TimeTracker.Classic.Presentation
                 _settingsStore.Save(_settings);
                 _startup.SetEnabled(_settings.StartWithWindows);
                 _overlay.ApplyCaptureSetting(_settings.HideOverlayFromCapture);
+                _overlay.ApplyVirtualDesktopSetting(_settings.ShowOverlayOnAllVirtualDesktops);
             }
         }
 

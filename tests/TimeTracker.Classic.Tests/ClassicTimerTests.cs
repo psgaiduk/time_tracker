@@ -12,6 +12,7 @@ namespace TimeTracker.Classic.Tests
             try
             {
                 TestRulesUseSeconds();
+                AppSettings_Defaults_ShowOverlayOnAllVirtualDesktops();
                 WorkCompletesByDeadline();
                 TrayStatus_Work_ShowsRemainingTime();
                 AwaitingDecision_ContinuesCountingWorkUntilRest();
@@ -37,6 +38,12 @@ namespace TimeTracker.Classic.Tests
             AssertEqual(TimeSpan.FromSeconds(25), rules.WorkDuration, "Test work duration");
             AssertEqual(TimeSpan.FromSeconds(5), rules.ShortBreakDuration, "Test short break duration");
             AssertEqual(TimeSpan.FromSeconds(90), rules.LongBreakDuration, "Test long break duration");
+        }
+
+        private static void AppSettings_Defaults_ShowOverlayOnAllVirtualDesktops()
+        {
+            AppSettings settings = new AppSettings();
+            AssertEqual(true, settings.ShowOverlayOnAllVirtualDesktops, "Overlay is shown on all virtual desktops by default");
         }
 
         private static void WorkCompletesByDeadline()

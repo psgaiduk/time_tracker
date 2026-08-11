@@ -12,6 +12,7 @@ namespace TimeTracker.Classic.Presentation
         private const uint WdaExcludeFromCapture = 0x11;
         private readonly TimerCoordinator _coordinator;
         private readonly AppSettings _settings;
+        private readonly Action<IntPtr, bool> _setVirtualDesktopPinning;
         private readonly Label _message;
         private readonly Label _remaining;
         private readonly Label _continuous;
@@ -23,10 +24,11 @@ namespace TimeTracker.Classic.Presentation
         private readonly LinkLabel _summaryLink;
         private bool _excludeFromCapture;
 
-        internal BreakOverlayForm(TimerCoordinator coordinator, AppSettings settings)
+        internal BreakOverlayForm(TimerCoordinator coordinator, AppSettings settings, Action<IntPtr, bool> setVirtualDesktopPinning)
         {
             _coordinator = coordinator;
             _settings = settings;
+            _setVirtualDesktopPinning = setVirtualDesktopPinning;
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
             TopMost = true;
@@ -66,16 +68,32 @@ namespace TimeTracker.Classic.Presentation
             ApplyDisplayAffinity();
         }
 
+        internal void ApplyVirtualDesktopSetting(bool enabled)
+        {
+            _settings.ShowOverlayOnAllVirtualDesktops = enabled;
+            ApplyVirtualDesktopPinning();
+        }
+
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
             ApplyDisplayAffinity();
+            ApplyVirtualDesktopPinning();
         }
 
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
             ApplyDisplayAffinity();
+            ApplyVirtualDesktopPinning();
+            BeginInvoke(new MethodInvoker(ApplyVirtualDesktopPinning));
+        }
+
+        private void ApplyVirtualDesktopPinning()
+        {
+            if (!IsHandleCreated || _setVirtualDesktopPinning == null) return;
+            try { _setVirtualDesktopPinning(Handle, _settings.ShowOverlayOnAllVirtualDesktops); }
+            catch (Exception) { }
         }
 
         private void ApplyDisplayAffinity()

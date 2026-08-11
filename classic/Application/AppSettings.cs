@@ -7,6 +7,7 @@ namespace TimeTracker.Classic.Application
         internal AppSettings()
         {
             HideOverlayFromCapture = true;
+            ShowOverlayOnAllVirtualDesktops = true;
             StartWithWindows = false;
             LongBreakEnabled = true;
             Monday = Tuesday = Wednesday = Thursday = Friday = Saturday = Sunday = true;
@@ -15,6 +16,7 @@ namespace TimeTracker.Classic.Application
         }
 
         internal bool HideOverlayFromCapture { get; set; }
+        internal bool ShowOverlayOnAllVirtualDesktops { get; set; }
         internal bool StartWithWindows { get; set; }
         internal bool LongBreakEnabled { get; set; }
         internal bool Monday { get; set; }

@@ -27,6 +27,7 @@ namespace TimeTracker.Classic.Infrastructure
                 bool value;
                 if (!Boolean.TryParse(pair[1], out value)) continue;
                 if (pair[0] == "HideOverlayFromCapture") result.HideOverlayFromCapture = value;
+                if (pair[0] == "ShowOverlayOnAllVirtualDesktops") result.ShowOverlayOnAllVirtualDesktops = value;
                 if (pair[0] == "StartWithWindows") result.StartWithWindows = value;
                 if (pair[0] == "LongBreakEnabled") result.LongBreakEnabled = value;
                 if (pair[0] == "Monday") result.Monday = value;
@@ -45,6 +46,7 @@ namespace TimeTracker.Classic.Infrastructure
         {
             File.WriteAllLines(_path, new[] {
                 "HideOverlayFromCapture=" + settings.HideOverlayFromCapture,
+                "ShowOverlayOnAllVirtualDesktops=" + settings.ShowOverlayOnAllVirtualDesktops,
                 "StartWithWindows=" + settings.StartWithWindows,
                 "LongBreakEnabled=" + settings.LongBreakEnabled,
                 "Monday=" + settings.Monday,

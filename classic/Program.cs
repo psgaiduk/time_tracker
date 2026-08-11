@@ -22,7 +22,8 @@ namespace TimeTracker.Classic
             TimerRules rules = TimerRules.Default(settings.IsLongBreakAllowed, delegate { return settings.WorkSummaryEnabled; });
 #endif
             TimerCoordinator coordinator = new TimerCoordinator(new SystemClock(), rules, new CsvWorkHistoryStore());
-            System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, settingsStore, new StartupRegistration(), settings));
+            VirtualDesktopWindowPinning windowPinning = new VirtualDesktopWindowPinning();
+            System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, settingsStore, new StartupRegistration(), settings, windowPinning.SetPinned));
         }
     }
 }
