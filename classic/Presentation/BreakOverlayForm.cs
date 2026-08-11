@@ -14,6 +14,8 @@ namespace TimeTracker.Classic.Presentation
         private readonly TimerRules _rules;
         private readonly AppSettings _settings;
         private readonly Action<IntPtr, bool> _setVirtualDesktopPinning;
+        private readonly Action _playBreakCompletedSound;
+        private readonly BreakCompletionSoundTrigger _breakCompletionSoundTrigger;
         private readonly Label _message;
         private readonly Label _remaining;
         private readonly Label _continuous;
@@ -28,12 +30,14 @@ namespace TimeTracker.Classic.Presentation
         private TimeSpan _breakRemaining;
         private TimeSpan _breakDuration;
 
-        internal BreakOverlayForm(TimerCoordinator coordinator, TimerRules rules, AppSettings settings, Action<IntPtr, bool> setVirtualDesktopPinning)
+        internal BreakOverlayForm(TimerCoordinator coordinator, TimerRules rules, AppSettings settings, Action<IntPtr, bool> setVirtualDesktopPinning, Action playBreakCompletedSound)
         {
             _coordinator = coordinator;
             _rules = rules;
             _settings = settings;
             _setVirtualDesktopPinning = setVirtualDesktopPinning;
+            _playBreakCompletedSound = playBreakCompletedSound;
+            _breakCompletionSoundTrigger = new BreakCompletionSoundTrigger();
             FormBorderStyle = FormBorderStyle.None;
             DoubleBuffered = true;
             ShowInTaskbar = false;
@@ -129,6 +133,11 @@ namespace TimeTracker.Classic.Presentation
         {
             TimerState state = _coordinator.State;
             DailyWorkStats stats = _coordinator.Stats;
+            if (_breakCompletionSoundTrigger.ShouldPlay(state) && _playBreakCompletedSound != null)
+            {
+                try { _playBreakCompletedSound(); }
+                catch (Exception) { }
+            }
             _remaining.Text = state.Phase == TimerPhase.AwaitingBreakDecision ? Format(stats.CurrentPeriod) : Format(state.Remaining);
             _continuous.Text = "Без отдыха: " + Format(stats.ContinuousWork);
             _today.Text = "Сегодня: " + Format(stats.WorkedToday);

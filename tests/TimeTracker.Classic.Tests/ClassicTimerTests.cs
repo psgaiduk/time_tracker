@@ -14,6 +14,7 @@ namespace TimeTracker.Classic.Tests
                 TestRulesUseSeconds();
                 AppSettings_Defaults_ShowOverlayOnAllVirtualDesktops();
                 BreakProgressWidth_DecreasesWithRemainingTime();
+                BreakCompletionSoundTrigger_PlaysOnceAndResetsForNextBreak();
                 WorkCompletesByDeadline();
                 TrayStatus_Work_ShowsRemainingTime();
                 AwaitingDecision_ContinuesCountingWorkUntilRest();
@@ -52,6 +53,16 @@ namespace TimeTracker.Classic.Tests
             AssertEqual(1000, BreakProgressWidth.Calculate(1000, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5)), "Full break progress width");
             AssertEqual(500, BreakProgressWidth.Calculate(1000, TimeSpan.FromMinutes(2.5), TimeSpan.FromMinutes(5)), "Half break progress width");
             AssertEqual(0, BreakProgressWidth.Calculate(1000, TimeSpan.Zero, TimeSpan.FromMinutes(5)), "Finished break progress width");
+        }
+
+        private static void BreakCompletionSoundTrigger_PlaysOnceAndResetsForNextBreak()
+        {
+            BreakCompletionSoundTrigger trigger = new BreakCompletionSoundTrigger();
+            AssertEqual(false, trigger.ShouldPlay(new TimerState(TimerPhase.ShortBreak, TimeSpan.FromSeconds(1), 0)), "No sound before break deadline");
+            AssertEqual(true, trigger.ShouldPlay(new TimerState(TimerPhase.ShortBreak, TimeSpan.Zero, 0)), "Sound at break deadline");
+            AssertEqual(false, trigger.ShouldPlay(new TimerState(TimerPhase.ShortBreak, TimeSpan.Zero, 0)), "No repeated sound after break deadline");
+            AssertEqual(false, trigger.ShouldPlay(new TimerState(TimerPhase.Work, TimeSpan.FromSeconds(25), 0)), "Reset outside break");
+            AssertEqual(true, trigger.ShouldPlay(new TimerState(TimerPhase.LongBreak, TimeSpan.Zero, 0)), "Sound for next break");
         }
 
         private static void WorkCompletesByDeadline()
