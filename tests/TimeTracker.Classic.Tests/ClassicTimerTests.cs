@@ -13,6 +13,7 @@ namespace TimeTracker.Classic.Tests
             {
                 TestRulesUseSeconds();
                 AppSettings_Defaults_ShowOverlayOnAllVirtualDesktops();
+                BreakProgressWidth_DecreasesWithRemainingTime();
                 WorkCompletesByDeadline();
                 TrayStatus_Work_ShowsRemainingTime();
                 AwaitingDecision_ContinuesCountingWorkUntilRest();
@@ -44,6 +45,13 @@ namespace TimeTracker.Classic.Tests
         {
             AppSettings settings = new AppSettings();
             AssertEqual(true, settings.ShowOverlayOnAllVirtualDesktops, "Overlay is shown on all virtual desktops by default");
+        }
+
+        private static void BreakProgressWidth_DecreasesWithRemainingTime()
+        {
+            AssertEqual(1000, BreakProgressWidth.Calculate(1000, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5)), "Full break progress width");
+            AssertEqual(500, BreakProgressWidth.Calculate(1000, TimeSpan.FromMinutes(2.5), TimeSpan.FromMinutes(5)), "Half break progress width");
+            AssertEqual(0, BreakProgressWidth.Calculate(1000, TimeSpan.Zero, TimeSpan.FromMinutes(5)), "Finished break progress width");
         }
 
         private static void WorkCompletesByDeadline()

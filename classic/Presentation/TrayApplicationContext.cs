@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using TimeTracker.Classic.Application;
+using TimeTracker.Classic.Domain;
 using TimeTracker.Classic.Infrastructure;
 
 namespace TimeTracker.Classic.Presentation
@@ -20,13 +21,13 @@ namespace TimeTracker.Classic.Presentation
         private Icon _dynamicIcon;
         private string _iconKey;
 
-        internal TrayApplicationContext(TimerCoordinator coordinator, ISettingsStore settingsStore, StartupRegistration startup, AppSettings settings, Action<IntPtr, bool> setVirtualDesktopPinning)
+        internal TrayApplicationContext(TimerCoordinator coordinator, TimerRules rules, ISettingsStore settingsStore, StartupRegistration startup, AppSettings settings, Action<IntPtr, bool> setVirtualDesktopPinning)
         {
             _coordinator = coordinator;
             _settingsStore = settingsStore;
             _startup = startup;
             _settings = settings;
-            _overlay = new BreakOverlayForm(coordinator, settings, setVirtualDesktopPinning);
+            _overlay = new BreakOverlayForm(coordinator, rules, settings, setVirtualDesktopPinning);
             _overlay.ApplyCaptureSetting(_settings.HideOverlayFromCapture);
             _overlay.ApplyVirtualDesktopSetting(_settings.ShowOverlayOnAllVirtualDesktops);
 

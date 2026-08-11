@@ -23,7 +23,7 @@ namespace TimeTracker.Classic
 #endif
             TimerCoordinator coordinator = new TimerCoordinator(new SystemClock(), rules, new CsvWorkHistoryStore());
             VirtualDesktopWindowPinning windowPinning = new VirtualDesktopWindowPinning();
-            System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, settingsStore, new StartupRegistration(), settings, windowPinning.SetPinned));
+            System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, rules, settingsStore, new StartupRegistration(), settings, windowPinning.SetPinned));
         }
     }
 }

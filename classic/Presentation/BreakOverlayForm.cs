@@ -11,6 +11,7 @@ namespace TimeTracker.Classic.Presentation
     {
         private const uint WdaExcludeFromCapture = 0x11;
         private readonly TimerCoordinator _coordinator;
+        private readonly TimerRules _rules;
         private readonly AppSettings _settings;
         private readonly Action<IntPtr, bool> _setVirtualDesktopPinning;
         private readonly Label _message;
@@ -23,13 +24,18 @@ namespace TimeTracker.Classic.Presentation
         private readonly Button _continueToBreak;
         private readonly LinkLabel _summaryLink;
         private bool _excludeFromCapture;
+        private bool _showBreakProgress;
+        private TimeSpan _breakRemaining;
+        private TimeSpan _breakDuration;
 
-        internal BreakOverlayForm(TimerCoordinator coordinator, AppSettings settings, Action<IntPtr, bool> setVirtualDesktopPinning)
+        internal BreakOverlayForm(TimerCoordinator coordinator, TimerRules rules, AppSettings settings, Action<IntPtr, bool> setVirtualDesktopPinning)
         {
             _coordinator = coordinator;
+            _rules = rules;
             _settings = settings;
             _setVirtualDesktopPinning = setVirtualDesktopPinning;
             FormBorderStyle = FormBorderStyle.None;
+            DoubleBuffered = true;
             ShowInTaskbar = false;
             TopMost = true;
             StartPosition = FormStartPosition.Manual;
@@ -60,6 +66,23 @@ namespace TimeTracker.Classic.Presentation
             Controls.AddRange(new Control[] { _message, _remaining, _continuous, _today, _summaryLink, _skip, _rest, _endBreak, _continueToBreak });
             _coordinator.StateChanged += delegate { UpdateState(); };
             UpdateState();
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            if (!_showBreakProgress)
+            {
+                base.OnPaintBackground(e);
+                return;
+            }
+
+            e.Graphics.Clear(Color.RoyalBlue);
+            int width = BreakProgressWidth.Calculate(ClientSize.Width, _breakRemaining, _breakDuration);
+            if (width > 0)
+            {
+                using (Brush brush = new SolidBrush(Color.SeaGreen))
+                    e.Graphics.FillRectangle(brush, 0, 0, width, ClientSize.Height);
+            }
         }
 
         internal void ApplyCaptureSetting(bool enabled)
@@ -116,6 +139,7 @@ namespace TimeTracker.Classic.Presentation
             _summaryLink.Visible = state.Phase == TimerPhase.WorkSummary && !String.IsNullOrWhiteSpace(_settings.WorkSummaryUrl);
             if (state.Phase == TimerPhase.WorkSummary)
             {
+                _showBreakProgress = false;
                 BackColor = Color.RoyalBlue;
                 _message.Text = _summaryLink.Visible ? "Заполни итоги работы:" : "Заполни итоги работы";
                 _message.Width = _summaryLink.Visible ? 190 : 250;
@@ -127,6 +151,7 @@ namespace TimeTracker.Classic.Presentation
             }
             else if (state.Phase == TimerPhase.AwaitingBreakDecision)
             {
+                _showBreakProgress = false;
                 RestoreStatisticsVisibility();
                 BackColor = Color.Firebrick;
                 _message.Text = "Рабочий интервал завершён";
@@ -135,12 +160,17 @@ namespace TimeTracker.Classic.Presentation
             else if (state.Phase == TimerPhase.ShortBreak || state.Phase == TimerPhase.LongBreak)
             {
                 RestoreStatisticsVisibility();
-                BackColor = Color.SeaGreen;
+                _showBreakProgress = true;
+                _breakRemaining = state.Remaining;
+                _breakDuration = state.Phase == TimerPhase.LongBreak ? _rules.LongBreakDuration : _rules.ShortBreakDuration;
+                BackColor = Color.RoyalBlue;
                 _message.Text = state.Phase == TimerPhase.LongBreak ? "Большой перерыв" : "Короткий перерыв";
+                Invalidate(true);
                 Show();
             }
             else
             {
+                _showBreakProgress = false;
                 RestoreStatisticsVisibility();
                 BackColor = Color.FromArgb(51, 65, 85);
                 _message.Text = "Работа";
