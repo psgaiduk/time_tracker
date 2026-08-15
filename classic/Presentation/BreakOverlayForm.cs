@@ -45,10 +45,10 @@ namespace TimeTracker.Classic.Presentation
             StartPosition = FormStartPosition.Manual;
             Bounds = new Rectangle(Screen.PrimaryScreen.WorkingArea.Left, Screen.PrimaryScreen.WorkingArea.Top, Screen.PrimaryScreen.WorkingArea.Width, 64);
 
-            _message = new Label { Left = 15, Top = 0, Width = 250, Height = 64, TextAlign = ContentAlignment.MiddleLeft, ForeColor = Color.White, Font = new Font("Segoe UI", 12, FontStyle.Bold) };
-            _remaining = new Label { Left = 265, Top = 0, Width = 165, Height = 64, AutoSize = false, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.White, Font = new Font("Consolas", 17, FontStyle.Bold) };
-            _continuous = new Label { Left = 440, Top = 0, Width = 175, Height = 64, TextAlign = ContentAlignment.MiddleLeft, ForeColor = Color.White };
-            _today = new Label { Left = 620, Top = 0, Width = 175, Height = 64, TextAlign = ContentAlignment.MiddleLeft, ForeColor = Color.White };
+            _message = new Label { Left = 15, Top = 0, Width = 250, Height = 64, TextAlign = ContentAlignment.MiddleLeft, ForeColor = Color.White, BackColor = Color.Transparent, Font = new Font("Segoe UI", 12, FontStyle.Bold) };
+            _remaining = new Label { Left = 265, Top = 0, Width = 165, Height = 64, AutoSize = false, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.White, BackColor = Color.Transparent, Font = new Font("Consolas", 17, FontStyle.Bold) };
+            _continuous = new Label { Left = 440, Top = 0, Width = 175, Height = 64, TextAlign = ContentAlignment.MiddleLeft, ForeColor = Color.White, BackColor = Color.Transparent };
+            _today = new Label { Left = 620, Top = 0, Width = 175, Height = 64, TextAlign = ContentAlignment.MiddleLeft, ForeColor = Color.White, BackColor = Color.Transparent };
             _skip = new Button { Width = 100, Height = 36, Text = "Пропустить", Anchor = AnchorStyles.Top | AnchorStyles.Right };
             _rest = new Button { Width = 100, Height = 36, Text = "Отдыхать", Anchor = AnchorStyles.Top | AnchorStyles.Right };
             _endBreak = new Button { Width = 150, Height = 36, Text = "Завершить отдых", Anchor = AnchorStyles.Top | AnchorStyles.Right };
