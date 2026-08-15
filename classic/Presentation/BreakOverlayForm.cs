@@ -15,6 +15,7 @@ namespace TimeTracker.Classic.Presentation
         private readonly AppSettings _settings;
         private readonly Action<IntPtr, bool> _setVirtualDesktopPinning;
         private readonly Action _playBreakCompletedSound;
+        private readonly Action<bool> _setActivitySimulationEnabled;
         private readonly BreakCompletionSoundTrigger _breakCompletionSoundTrigger;
         private readonly Label _message;
         private readonly Label _remaining;
@@ -25,18 +26,20 @@ namespace TimeTracker.Classic.Presentation
         private readonly Button _endBreak;
         private readonly Button _continueToBreak;
         private readonly LinkLabel _summaryLink;
+        private readonly CheckBox _simulateActivity;
         private bool _excludeFromCapture;
         private bool _showBreakProgress;
         private TimeSpan _breakRemaining;
         private TimeSpan _breakDuration;
 
-        internal BreakOverlayForm(TimerCoordinator coordinator, TimerRules rules, AppSettings settings, Action<IntPtr, bool> setVirtualDesktopPinning, Action playBreakCompletedSound)
+        internal BreakOverlayForm(TimerCoordinator coordinator, TimerRules rules, AppSettings settings, Action<IntPtr, bool> setVirtualDesktopPinning, Action playBreakCompletedSound, Action<bool> setActivitySimulationEnabled)
         {
             _coordinator = coordinator;
             _rules = rules;
             _settings = settings;
             _setVirtualDesktopPinning = setVirtualDesktopPinning;
             _playBreakCompletedSound = playBreakCompletedSound;
+            _setActivitySimulationEnabled = setActivitySimulationEnabled;
             _breakCompletionSoundTrigger = new BreakCompletionSoundTrigger();
             FormBorderStyle = FormBorderStyle.None;
             DoubleBuffered = true;
@@ -54,20 +57,27 @@ namespace TimeTracker.Classic.Presentation
             _endBreak = new Button { Width = 150, Height = 36, Text = "Завершить отдых", Anchor = AnchorStyles.Top | AnchorStyles.Right };
             _continueToBreak = new Button { Width = 160, Height = 36, Text = "Перейти к отдыху", Anchor = AnchorStyles.Top | AnchorStyles.Right };
             _summaryLink = new LinkLabel { Left = 205, Top = 0, Width = 590, Height = 64, TextAlign = ContentAlignment.MiddleLeft, LinkColor = Color.White, ActiveLinkColor = Color.Yellow, BackColor = Color.Transparent };
+            _simulateActivity = new CheckBox { Width = 24, Height = 36, BackColor = Color.Transparent, Anchor = AnchorStyles.Top | AnchorStyles.Right, Visible = false };
             _skip.Location = new Point(ClientSize.Width - 220, 14);
             _rest.Location = new Point(ClientSize.Width - 110, 14);
-            _endBreak.Location = new Point(ClientSize.Width - 160, 14);
+            _endBreak.Location = new Point(ClientSize.Width - 190, 14);
             _continueToBreak.Location = new Point(ClientSize.Width - 170, 14);
+            _simulateActivity.Location = new Point(ClientSize.Width - 30, 14);
             _skip.Click += delegate { _coordinator.Skip(); };
             _rest.Click += delegate { _coordinator.Rest(); };
             _endBreak.Click += delegate { _coordinator.EndBreak(); };
             _continueToBreak.Click += delegate { _coordinator.CompleteWorkSummary(); };
+            _simulateActivity.CheckedChanged += delegate
+            {
+                if (_setActivitySimulationEnabled != null)
+                    _setActivitySimulationEnabled(_simulateActivity.Checked);
+            };
             _summaryLink.LinkClicked += delegate
             {
                 try { System.Diagnostics.Process.Start(_settings.WorkSummaryUrl); }
                 catch (Exception error) { MessageBox.Show("Не удалось открыть ссылку:\n" + error.Message, "Time Tracker"); }
             };
-            Controls.AddRange(new Control[] { _message, _remaining, _continuous, _today, _summaryLink, _skip, _rest, _endBreak, _continueToBreak });
+            Controls.AddRange(new Control[] { _message, _remaining, _continuous, _today, _summaryLink, _skip, _rest, _endBreak, _continueToBreak, _simulateActivity });
             _coordinator.StateChanged += delegate { UpdateState(); };
             UpdateState();
         }
@@ -137,6 +147,9 @@ namespace TimeTracker.Classic.Presentation
             _rest.Visible = state.Phase == TimerPhase.AwaitingBreakDecision;
             _endBreak.Visible = state.Phase == TimerPhase.ShortBreak || state.Phase == TimerPhase.LongBreak;
             _continueToBreak.Visible = state.Phase == TimerPhase.WorkSummary;
+            bool isBreak = state.Phase == TimerPhase.ShortBreak || state.Phase == TimerPhase.LongBreak;
+            _simulateActivity.Visible = isBreak;
+            if (!isBreak && _simulateActivity.Checked) _simulateActivity.Checked = false;
             _summaryLink.Visible = state.Phase == TimerPhase.WorkSummary && !String.IsNullOrWhiteSpace(_settings.WorkSummaryUrl);
             if (state.Phase == TimerPhase.WorkSummary)
             {
