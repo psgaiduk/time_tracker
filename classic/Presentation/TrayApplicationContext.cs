@@ -40,7 +40,7 @@ namespace TimeTracker.Classic.Presentation
             menu.MenuItems.Add("-");
             menu.MenuItems.Add("Выход", delegate { Exit(); });
             _trayIcon = new NotifyIcon { Icon = SystemIcons.Application, Text = "Time Tracker", ContextMenu = menu, Visible = true };
-            _trayIcon.DoubleClick += delegate { StartWork(); };
+            _trayIcon.DoubleClick += delegate { HandleTrayDoubleClick(); };
             _coordinator.StateChanged += delegate { UpdateTrayStatus(); };
 
             _timer = new Timer { Interval = 250 };
@@ -53,6 +53,16 @@ namespace TimeTracker.Classic.Presentation
         {
             try { _coordinator.Start(); }
             catch (InvalidOperationException) { }
+        }
+
+        private void HandleTrayDoubleClick()
+        {
+            if (_coordinator.State.Phase == TimerPhase.Work)
+            {
+                _coordinator.StartShortBreak();
+                return;
+            }
+            StartWork();
         }
 
         private void UpdateTrayStatus()

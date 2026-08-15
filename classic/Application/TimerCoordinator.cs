@@ -31,6 +31,7 @@ namespace TimeTracker.Classic.Application
         }
         internal void Skip() { EndWork(_clock.Now, false); _session.Skip(_clock.Now); BeginWork(_clock.Now, false); Publish(); }
         internal void Rest() { EndWork(_clock.Now, true); _session.Rest(_clock.Now); Publish(); }
+        internal void StartShortBreak() { EndWork(_clock.Now, true); _session.StartShortBreak(_clock.Now); Publish(); }
         internal void EndBreak() { _session.EndBreak(_clock.Now); BeginWork(_clock.Now, true); Publish(); }
         internal void CompleteWorkSummary() { _session.CompleteWorkSummary(_clock.Now); Publish(); }
 

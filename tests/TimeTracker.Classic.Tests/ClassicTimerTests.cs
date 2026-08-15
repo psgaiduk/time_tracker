@@ -18,6 +18,7 @@ namespace TimeTracker.Classic.Tests
                 WorkCompletesByDeadline();
                 TrayStatus_Work_ShowsRemainingTime();
                 AwaitingDecision_ContinuesCountingWorkUntilRest();
+                StartShortBreakDuringWork_StartsShortBreakAndSavesWorkedTime();
                 EndBreak_ShortBreak_StartsWorkImmediately();
                 TrayIcon_Work_ShowsContinuousMinutes();
                 FifthWork_Rest_StartsLongBreakAfterDecision();
@@ -112,6 +113,23 @@ namespace TimeTracker.Classic.Tests
             TimerState state = session.GetState(start.AddSeconds(27));
             AssertEqual(TimerPhase.Work, state.Phase, "Phase after ending break");
             AssertEqual(TimeSpan.FromSeconds(25), state.Remaining, "Work duration after ending break");
+        }
+
+        private static void StartShortBreakDuringWork_StartsShortBreakAndSavesWorkedTime()
+        {
+            DateTime start = new DateTime(2026, 8, 15, 9, 0, 0);
+            FakeClock clock = new FakeClock(start);
+            FakeHistoryStore history = new FakeHistoryStore();
+            TimerCoordinator coordinator = new TimerCoordinator(clock, TimerRules.Test(), history);
+            coordinator.Start();
+            clock.Now = start.AddSeconds(10);
+
+            coordinator.StartShortBreak();
+
+            AssertEqual(TimerPhase.ShortBreak, coordinator.State.Phase, "Short break after tray action during work");
+            AssertEqual(TimeSpan.FromSeconds(5), coordinator.State.Remaining, "Short break duration after tray action");
+            AssertEqual(0, coordinator.State.CompletedWorkIntervals, "Interrupted work is not a completed interval");
+            AssertEqual(TimeSpan.FromSeconds(10), history.Total, "Worked time saved before short break");
         }
 
         private static void TrayIcon_Work_ShowsContinuousMinutes()

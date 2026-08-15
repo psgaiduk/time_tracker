@@ -62,6 +62,12 @@ namespace TimeTracker.Classic.Domain
             }
         }
 
+        internal void StartShortBreak(DateTime now)
+        {
+            if (_phase != TimerPhase.Work) throw new InvalidOperationException();
+            Start(TimerPhase.ShortBreak, _rules.ShortBreakDuration, now);
+        }
+
         internal void CompleteWorkSummary(DateTime now)
         {
             if (_phase != TimerPhase.WorkSummary) throw new InvalidOperationException();
