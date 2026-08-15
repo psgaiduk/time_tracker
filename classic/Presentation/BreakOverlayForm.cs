@@ -108,14 +108,6 @@ namespace TimeTracker.Classic.Presentation
             ApplyVirtualDesktopPinning();
         }
 
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
-            ApplyDisplayAffinity();
-            ApplyVirtualDesktopPinning();
-            BeginInvoke(new MethodInvoker(ApplyVirtualDesktopPinning));
-        }
-
         private void ApplyVirtualDesktopPinning()
         {
             if (!IsHandleCreated || _setVirtualDesktopPinning == null) return;
@@ -156,7 +148,7 @@ namespace TimeTracker.Classic.Presentation
                 _remaining.Visible = false;
                 _continuous.Visible = false;
                 _today.Visible = false;
-                Show();
+                ShowOverlay();
             }
             else if (state.Phase == TimerPhase.AwaitingBreakDecision)
             {
@@ -164,7 +156,7 @@ namespace TimeTracker.Classic.Presentation
                 RestoreStatisticsVisibility();
                 BackColor = Color.Firebrick;
                 _message.Text = "Рабочий интервал завершён";
-                Show();
+                ShowOverlay();
             }
             else if (state.Phase == TimerPhase.ShortBreak || state.Phase == TimerPhase.LongBreak)
             {
@@ -175,7 +167,7 @@ namespace TimeTracker.Classic.Presentation
                 BackColor = Color.RoyalBlue;
                 _message.Text = state.Phase == TimerPhase.LongBreak ? "Большой перерыв" : "Короткий перерыв";
                 Invalidate(true);
-                Show();
+                ShowOverlay();
             }
             else
             {
@@ -194,6 +186,15 @@ namespace TimeTracker.Classic.Presentation
             _remaining.Visible = true;
             _continuous.Visible = true;
             _today.Visible = true;
+        }
+
+        private void ShowOverlay()
+        {
+            if (Visible) return;
+            Show();
+            ApplyDisplayAffinity();
+            ApplyVirtualDesktopPinning();
+            BeginInvoke(new MethodInvoker(ApplyVirtualDesktopPinning));
         }
 
         private static string Format(TimeSpan value)
