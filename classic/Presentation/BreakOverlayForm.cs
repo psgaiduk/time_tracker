@@ -140,7 +140,8 @@ namespace TimeTracker.Classic.Presentation
                 try { _playBreakCompletedSound(); }
                 catch (Exception) { }
             }
-            _remaining.Text = state.Phase == TimerPhase.AwaitingBreakDecision ? Format(stats.CurrentPeriod) : Format(state.Remaining);
+            _remaining.Text = state.Overdue > TimeSpan.Zero ? Format(state.Overdue) :
+                (state.Phase == TimerPhase.AwaitingBreakDecision ? Format(stats.CurrentPeriod) : Format(state.Remaining));
             _continuous.Text = "Без отдыха: " + Format(stats.ContinuousWork);
             _today.Text = "Сегодня: " + Format(stats.WorkedToday);
             _skip.Visible = state.Phase == TimerPhase.AwaitingBreakDecision;
@@ -176,9 +177,10 @@ namespace TimeTracker.Classic.Presentation
                 RestoreStatisticsVisibility();
                 _showBreakProgress = true;
                 _breakRemaining = state.Remaining;
-                _breakDuration = state.Phase == TimerPhase.LongBreak ? _rules.LongBreakDuration : _rules.ShortBreakDuration;
+                _breakDuration = state.BreakDuration;
                 BackColor = Color.RoyalBlue;
-                _message.Text = state.Phase == TimerPhase.LongBreak ? "Большой перерыв" : "Короткий перерыв";
+                _message.Text = state.Overdue > TimeSpan.Zero ? LocalizedText.BreakOverdue :
+                    (state.Phase == TimerPhase.LongBreak ? "Большой перерыв" : "Короткий перерыв");
                 Invalidate(true);
                 ShowOverlay();
             }

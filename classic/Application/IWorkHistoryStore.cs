@@ -4,7 +4,8 @@ namespace TimeTracker.Classic.Application
 {
     internal interface IWorkHistoryStore
     {
-        void Add(DateTime startedAt, DateTime finishedAt);
+        void Add(HistoryEntry entry);
         TimeSpan GetTotal(DateTime day);
+        BreakBalances GetLatestBalances();
     }
 }

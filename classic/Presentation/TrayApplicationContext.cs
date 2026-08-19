@@ -107,6 +107,7 @@ namespace TimeTracker.Classic.Presentation
         private void Exit()
         {
             _timer.Stop();
+            _coordinator.Stop();
             _trayIcon.Visible = false;
             _trayIcon.Dispose();
             if (_dynamicIcon != null) _dynamicIcon.Dispose();

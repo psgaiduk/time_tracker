@@ -29,7 +29,7 @@ namespace TimeTracker.Classic.Domain
         internal TimeSpan WorkDuration { get; private set; }
         internal TimeSpan ShortBreakDuration { get; private set; }
         internal TimeSpan LongBreakDuration { get; private set; }
-        internal int WorkIntervalsBeforeLongBreak { get { return 5; } }
+        internal TimeSpan LongBreakThreshold { get { return TimeSpan.FromTicks(LongBreakDuration.Ticks * 11 / 18); } }
 
         internal static TimerRules Default()
         {
@@ -63,5 +63,7 @@ namespace TimeTracker.Classic.Domain
 
         internal bool IsLongBreakAllowed(DateTime now) { return _longBreakAllowed(now); }
         internal bool IsSummaryPromptEnabled() { return _summaryPromptEnabled(); }
+        internal TimeSpan AccrueShortBreak(TimeSpan work) { return TimeSpan.FromTicks(work.Ticks / 5); }
+        internal TimeSpan AccrueLongBreak(TimeSpan work) { return TimeSpan.FromTicks(work.Ticks / 2); }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TimeTracker.Classic.Domain;
 using TimeTracker.Classic.Presentation;
 using TimeTracker.Classic.Application;
@@ -25,6 +26,16 @@ namespace TimeTracker.Classic.Tests
                 FifthWork_LongBreakDisabled_StartsShortBreak();
                 Rest_SummaryPromptEnabled_WaitsBeforeBreak();
                 BreakDeadline_WaitsForExplicitEndBreak();
+                Work_AccruesShortAndLongBreakBalances();
+                Rest_WithLongBalanceAtThreshold_StartsLongBreak();
+                EndBreak_EarlyShortBreak_PreservesUnusedBalance();
+                EndBreak_OverdueShortBreak_DeductsExcessFromLongBalance();
+                EndBreak_EarlyLongBreak_PreservesUnusedLongBalanceAndClearsShort();
+                BreakState_AfterDeadline_ShowsOverdueTime();
+                CompleteWorkSummary_CountsSummaryTimeAsWork();
+                EndBreak_RecordsTypedHistoryAndBalances();
+                Coordinator_RestoresBalancesFromHistory();
+                Stop_DuringWork_RecordsHistoryAndEarnedBalances();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -127,7 +138,7 @@ namespace TimeTracker.Classic.Tests
             coordinator.StartShortBreak();
 
             AssertEqual(TimerPhase.ShortBreak, coordinator.State.Phase, "Short break after tray action during work");
-            AssertEqual(TimeSpan.FromSeconds(5), coordinator.State.Remaining, "Short break duration after tray action");
+            AssertEqual(TimeSpan.FromSeconds(2), coordinator.State.Remaining, "Accumulated short break duration after tray action");
             AssertEqual(0, coordinator.State.CompletedWorkIntervals, "Interrupted work is not a completed interval");
             AssertEqual(TimeSpan.FromSeconds(10), history.Total, "Worked time saved before short break");
         }
@@ -163,7 +174,7 @@ namespace TimeTracker.Classic.Tests
             AssertEqual(5, session.GetState(now).CompletedWorkIntervals, "Completed count before long break");
             session.Rest(now);
             AssertEqual(TimerPhase.LongBreak, session.GetState(now).Phase, "Long break after rest choice");
-            AssertEqual(TimeSpan.FromSeconds(90), session.GetState(now).Remaining, "Long break duration");
+            AssertEqual(TimeSpan.FromSeconds(62.5), session.GetState(now).Remaining, "Accumulated long break duration");
         }
 
         private static void FifthWork_LongBreakDisabled_StartsShortBreak()
@@ -215,6 +226,137 @@ namespace TimeTracker.Classic.Tests
             AssertEqual(TimerPhase.Work, session.GetState(start.AddSeconds(31)).Phase, "Work after explicit end break");
         }
 
+        private static void Work_AccruesShortAndLongBreakBalances()
+        {
+            DateTime start = new DateTime(2026, 8, 19, 9, 0, 0);
+            TimerSession session = new TimerSession(TimerRules.Default());
+            session.StartWork(start);
+            session.Advance(start.AddMinutes(25));
+            session.Rest(start.AddMinutes(25));
+            TimerState state = session.GetState(start.AddMinutes(25));
+            AssertEqual(TimeSpan.FromMinutes(5), state.ShortBreakBalance, "Short balance after 25 work minutes");
+            AssertEqual(TimeSpan.FromMinutes(12.5), state.LongBreakBalance, "Long balance after 25 work minutes");
+            AssertEqual(TimeSpan.FromMinutes(5), state.Remaining, "Accumulated short break duration");
+        }
+
+        private static void Rest_WithLongBalanceAtThreshold_StartsLongBreak()
+        {
+            DateTime start = new DateTime(2026, 8, 19, 9, 0, 0);
+            TimerSession session = new TimerSession(TimerRules.Default());
+            session.StartWork(start);
+            session.Advance(start.AddMinutes(110));
+            session.Rest(start.AddMinutes(110));
+            TimerState state = session.GetState(start.AddMinutes(110));
+            AssertEqual(TimerPhase.LongBreak, state.Phase, "Long break at threshold");
+            AssertEqual(TimeSpan.Zero, state.ShortBreakBalance, "Long break clears short balance");
+            AssertEqual(TimeSpan.FromMinutes(55), state.Remaining, "Accumulated long break duration");
+        }
+
+        private static void EndBreak_EarlyShortBreak_PreservesUnusedBalance()
+        {
+            DateTime start = new DateTime(2026, 8, 19, 9, 0, 0);
+            TimerSession session = new TimerSession(TimerRules.Default());
+            session.StartWork(start);
+            session.Advance(start.AddMinutes(25));
+            session.Rest(start.AddMinutes(25));
+            session.EndBreak(start.AddMinutes(28));
+            AssertEqual(TimeSpan.FromMinutes(2), session.GetState(start.AddMinutes(28)).ShortBreakBalance, "Unused short balance");
+        }
+
+        private static void EndBreak_OverdueShortBreak_DeductsExcessFromLongBalance()
+        {
+            DateTime start = new DateTime(2026, 8, 19, 9, 0, 0);
+            TimerSession session = new TimerSession(TimerRules.Default());
+            session.StartWork(start);
+            session.Advance(start.AddMinutes(25));
+            session.Rest(start.AddMinutes(25));
+            session.EndBreak(start.AddMinutes(31));
+            TimerState state = session.GetState(start.AddMinutes(31));
+            AssertEqual(TimeSpan.Zero, state.ShortBreakBalance, "Used short balance");
+            AssertEqual(TimeSpan.FromMinutes(12), state.LongBreakBalance, "Only excess beyond ten percent deducted");
+        }
+
+        private static void EndBreak_EarlyLongBreak_PreservesUnusedLongBalanceAndClearsShort()
+        {
+            DateTime start = new DateTime(2026, 8, 19, 9, 0, 0);
+            TimerSession session = new TimerSession(TimerRules.Default());
+            session.StartWork(start);
+            session.Advance(start.AddMinutes(125));
+            session.Rest(start.AddMinutes(125));
+            session.EndBreak(start.AddMinutes(165));
+            TimerState state = session.GetState(start.AddMinutes(165));
+            AssertEqual(TimeSpan.Zero, state.ShortBreakBalance, "Long break cleared short balance");
+            AssertEqual(TimeSpan.FromMinutes(22.5), state.LongBreakBalance, "Unused long balance");
+        }
+
+        private static void BreakState_AfterDeadline_ShowsOverdueTime()
+        {
+            DateTime start = new DateTime(2026, 8, 19, 9, 0, 0);
+            TimerSession session = new TimerSession(TimerRules.Default());
+            session.StartWork(start);
+            session.Advance(start.AddMinutes(25));
+            session.Rest(start.AddMinutes(25));
+            TimerState state = session.GetState(start.AddMinutes(31));
+            AssertEqual(TimeSpan.FromMinutes(1), state.Overdue, "Break overdue duration");
+        }
+
+        private static void CompleteWorkSummary_CountsSummaryTimeAsWork()
+        {
+            DateTime start = new DateTime(2026, 8, 19, 9, 0, 0);
+            FakeClock clock = new FakeClock(start);
+            FakeHistoryStore history = new FakeHistoryStore();
+            TimerCoordinator coordinator = new TimerCoordinator(clock, TimerRules.Test(delegate(DateTime date) { return true; }, delegate { return true; }), history);
+            coordinator.Start();
+            clock.Now = start.AddSeconds(25);
+            coordinator.Tick();
+            coordinator.Rest();
+            clock.Now = start.AddSeconds(35);
+            coordinator.CompleteWorkSummary();
+            AssertEqual(TimeSpan.FromSeconds(35), history.Total, "Summary time saved as work");
+            AssertEqual(TimeSpan.FromSeconds(7), coordinator.State.Remaining, "Summary time accrued short rest");
+        }
+
+        private static void EndBreak_RecordsTypedHistoryAndBalances()
+        {
+            DateTime start = new DateTime(2026, 8, 19, 9, 0, 0);
+            FakeClock clock = new FakeClock(start);
+            FakeHistoryStore history = new FakeHistoryStore();
+            TimerCoordinator coordinator = new TimerCoordinator(clock, TimerRules.Default(), history);
+            coordinator.Start();
+            clock.Now = start.AddMinutes(25);
+            coordinator.Tick();
+            coordinator.Rest();
+            clock.Now = start.AddMinutes(28);
+            coordinator.EndBreak();
+            AssertEqual(2, history.Entries.Count, "Work and break history entries");
+            AssertEqual(ActivityKind.Work, history.Entries[0].Kind, "Work history kind");
+            AssertEqual(ActivityKind.ShortBreak, history.Entries[1].Kind, "Break history kind");
+            AssertEqual(TimeSpan.FromMinutes(5), history.Entries[1].PlannedDuration, "Planned break in history");
+            AssertEqual(TimeSpan.FromMinutes(2), history.GetLatestBalances().ShortBreak, "Persisted unused short balance");
+        }
+
+        private static void Coordinator_RestoresBalancesFromHistory()
+        {
+            FakeHistoryStore history = new FakeHistoryStore(new BreakBalances(TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(12)));
+            TimerCoordinator coordinator = new TimerCoordinator(new FakeClock(new DateTime(2026, 8, 19, 12, 0, 0)), TimerRules.Default(), history);
+            AssertEqual(TimeSpan.FromMinutes(2), coordinator.State.ShortBreakBalance, "Restored short balance");
+            AssertEqual(TimeSpan.FromMinutes(12), coordinator.State.LongBreakBalance, "Restored long balance");
+        }
+
+        private static void Stop_DuringWork_RecordsHistoryAndEarnedBalances()
+        {
+            DateTime start = new DateTime(2026, 8, 19, 12, 0, 0);
+            FakeClock clock = new FakeClock(start);
+            FakeHistoryStore history = new FakeHistoryStore();
+            TimerCoordinator coordinator = new TimerCoordinator(clock, TimerRules.Default(), history);
+            coordinator.Start();
+            clock.Now = start.AddMinutes(10);
+            coordinator.Stop();
+            AssertEqual(TimeSpan.FromMinutes(10), history.Total, "Work saved on application exit");
+            AssertEqual(TimeSpan.FromMinutes(2), history.GetLatestBalances().ShortBreak, "Short balance saved on application exit");
+            AssertEqual(TimeSpan.FromMinutes(5), history.GetLatestBalances().LongBreak, "Long balance saved on application exit");
+        }
+
         private sealed class FakeClock : IClock
         {
             internal FakeClock(DateTime now) { Now = now; }
@@ -224,8 +366,18 @@ namespace TimeTracker.Classic.Tests
         private sealed class FakeHistoryStore : IWorkHistoryStore
         {
             internal TimeSpan Total;
-            public void Add(DateTime startedAt, DateTime finishedAt) { Total += finishedAt - startedAt; }
+            internal readonly List<HistoryEntry> Entries = new List<HistoryEntry>();
+            private BreakBalances _balances = new BreakBalances(TimeSpan.Zero, TimeSpan.Zero);
+            internal FakeHistoryStore() { }
+            internal FakeHistoryStore(BreakBalances balances) { _balances = balances; }
+            public void Add(HistoryEntry entry)
+            {
+                if (entry.Kind == ActivityKind.Work) Total += entry.FinishedAt - entry.StartedAt;
+                Entries.Add(entry);
+                _balances = new BreakBalances(entry.ShortBreakBalance, entry.LongBreakBalance);
+            }
             public TimeSpan GetTotal(DateTime day) { return Total; }
+            public BreakBalances GetLatestBalances() { return _balances; }
         }
 
         private static void AssertEqual(object expected, object actual, string name)

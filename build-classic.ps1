@@ -12,6 +12,8 @@ $outputPath = Join-Path $outputDirectory $outputName
 $sources = Get-ChildItem -LiteralPath $sourceRoot -Filter '*.cs' -Recurse | ForEach-Object { $_.FullName }
 
 New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
+$englishResources = Join-Path $sourceRoot 'Presentation\StringsEn.resx'
+$russianResources = Join-Path $sourceRoot 'Presentation\StringsRu.resx'
 $arguments = @(
     '/nologo',
     '/target:winexe',
@@ -19,7 +21,10 @@ $arguments = @(
     '/reference:System.dll',
     '/reference:System.Drawing.dll',
     '/reference:System.Windows.Forms.dll',
-    "/out:$outputPath"
+    '/reference:System.Xml.dll',
+    "/out:$outputPath",
+    "/resource:$englishResources,StringsEn.resx",
+    "/resource:$russianResources,StringsRu.resx"
 )
 if ($Test) { $arguments += '/define:TEST_TIMER' }
 $arguments += $sources
