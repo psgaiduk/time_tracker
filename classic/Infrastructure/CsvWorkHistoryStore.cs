@@ -33,7 +33,7 @@ namespace TimeTracker.Classic.Infrastructure
             TimeSpan total = TimeSpan.Zero;
             foreach (HistoryEntry entry in ReadEntries())
             {
-                if (entry.Kind != ActivityKind.Work) continue;
+                if (entry.Kind != ActivityKind.Work && entry.Kind != ActivityKind.Meeting) continue;
                 DateTime segmentStart = entry.StartedAt < from ? from : entry.StartedAt;
                 DateTime segmentFinish = entry.FinishedAt > to ? to : entry.FinishedAt;
                 if (segmentFinish > segmentStart) total += segmentFinish - segmentStart;

@@ -39,6 +39,11 @@ namespace TimeTracker.Classic.Tests
                 WorkDaySummary_CalculatesSpanWorkAndBreakTotals();
                 FinishWorkDay_StopsCurrentPeriodAndReturnsSummary();
                 Coordinator_OfflineTimeReducesBothBalancesIndependently();
+                Meeting_SuppressesDeadlineUntilReturningToWork();
+                Meeting_ReturnBeforeDeadline_ContinuesRegularWork();
+                Meeting_Time_AccruesBreakAndIsRecordedSeparately();
+                WorkDaySummary_SeparatesFocusedWorkMeetingsAndTotalWork();
+                TrayIcon_Meeting_IsPurpleAndShowsContinuousMinutes();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -400,6 +405,68 @@ namespace TimeTracker.Classic.Tests
             AssertEqual(TimeSpan.FromMinutes(20), coordinator.State.LongBreakBalance, "Offline time independently reduces long balance");
         }
 
+        private static void Meeting_SuppressesDeadlineUntilReturningToWork()
+        {
+            DateTime start = new DateTime(2026, 8, 20, 9, 0, 0);
+            TimerSession session = new TimerSession(TimerRules.Default());
+            session.StartWork(start);
+            session.StartMeeting(start.AddMinutes(10));
+            session.Advance(start.AddMinutes(40));
+            AssertEqual(TimerPhase.Meeting, session.GetState(start.AddMinutes(40)).Phase, "Meeting ignores work deadline");
+            session.EndMeeting(start.AddMinutes(40));
+            AssertEqual(TimerPhase.AwaitingBreakDecision, session.GetState(start.AddMinutes(40)).Phase, "Returning after deadline shows decision");
+        }
+
+        private static void Meeting_ReturnBeforeDeadline_ContinuesRegularWork()
+        {
+            DateTime start = new DateTime(2026, 8, 20, 9, 0, 0);
+            TimerSession session = new TimerSession(TimerRules.Default());
+            session.StartWork(start);
+            session.StartMeeting(start.AddMinutes(5));
+            session.EndMeeting(start.AddMinutes(15));
+            TimerState state = session.GetState(start.AddMinutes(15));
+            AssertEqual(TimerPhase.Work, state.Phase, "Returning before deadline resumes work");
+            AssertEqual(TimeSpan.FromMinutes(10), state.Remaining, "Original work deadline is retained");
+        }
+
+        private static void Meeting_Time_AccruesBreakAndIsRecordedSeparately()
+        {
+            DateTime start = new DateTime(2026, 8, 20, 9, 0, 0);
+            FakeClock clock = new FakeClock(start);
+            FakeHistoryStore history = new FakeHistoryStore();
+            TimerCoordinator coordinator = new TimerCoordinator(clock, TimerRules.Default(), history);
+            coordinator.Start();
+            clock.Now = start.AddMinutes(5);
+            coordinator.ToggleMeeting();
+            clock.Now = start.AddMinutes(25);
+            coordinator.StartShortBreak();
+            AssertEqual(ActivityKind.Work, history.Entries[0].Kind, "Focused work history kind");
+            AssertEqual(ActivityKind.Meeting, history.Entries[1].Kind, "Meeting history kind");
+            AssertEqual(TimeSpan.FromMinutes(5), coordinator.State.Remaining, "Meeting accrues break like work");
+        }
+
+        private static void WorkDaySummary_SeparatesFocusedWorkMeetingsAndTotalWork()
+        {
+            DateTime start = new DateTime(2026, 8, 20, 9, 0, 0);
+            List<HistoryEntry> entries = new List<HistoryEntry>();
+            entries.Add(new HistoryEntry(ActivityKind.Work, start, start.AddHours(2), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            entries.Add(new HistoryEntry(ActivityKind.Meeting, start.AddHours(2), start.AddHours(3), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            entries.Add(new HistoryEntry(ActivityKind.ShortBreak, start.AddHours(3), start.AddHours(3.5), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            WorkDaySummary summary = WorkDaySummary.Create(entries, start.AddHours(3.5));
+            AssertEqual(TimeSpan.FromHours(3), summary.TotalWorkDuration, "Total work includes meetings");
+            AssertEqual(TimeSpan.FromHours(2), summary.WorkDuration, "Focused work total");
+            AssertEqual(TimeSpan.FromHours(1), summary.MeetingDuration, "Meeting total");
+            AssertEqual(TimeSpan.FromMinutes(30), summary.BreakDuration, "Rest total excludes meetings");
+        }
+
+        private static void TrayIcon_Meeting_IsPurpleAndShowsContinuousMinutes()
+        {
+            TimerState state = new TimerState(TimerPhase.Meeting, TimeSpan.Zero, 0);
+            DailyWorkStats stats = new DailyWorkStats(TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(35), TimeSpan.FromMinutes(35));
+            AssertEqual("35", TrayIconRenderer.GetText(state, stats), "Meeting tray minutes");
+            AssertEqual(System.Drawing.Color.MediumPurple, TrayIconRenderer.GetBackgroundColor(state), "Meeting tray color");
+        }
+
         private sealed class FakeClock : IClock
         {
             internal FakeClock(DateTime now) { Now = now; }
@@ -417,7 +484,7 @@ namespace TimeTracker.Classic.Tests
             internal FakeHistoryStore(BreakBalances balances, DateTime latestFinishedAt) { _balances = balances; _latestFinishedAt = latestFinishedAt; }
             public void Add(HistoryEntry entry)
             {
-                if (entry.Kind == ActivityKind.Work) Total += entry.FinishedAt - entry.StartedAt;
+                if (entry.Kind == ActivityKind.Work || entry.Kind == ActivityKind.Meeting) Total += entry.FinishedAt - entry.StartedAt;
                 Entries.Add(entry);
                 _balances = new BreakBalances(entry.ShortBreakBalance, entry.LongBreakBalance);
                 _latestFinishedAt = entry.FinishedAt;

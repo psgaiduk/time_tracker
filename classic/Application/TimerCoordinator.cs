@@ -13,6 +13,7 @@ namespace TimeTracker.Classic.Application
         private DateTime? _breakStartedAt;
         private TimerPhase _breakPhase;
         private TimeSpan _plannedBreakDuration;
+        private ActivityKind _currentActivityKind;
 
         internal TimerCoordinator(IClock clock, TimerRules rules, IWorkHistoryStore history)
         {
@@ -38,6 +39,23 @@ namespace TimeTracker.Classic.Application
             DateTime now = _clock.Now;
             _session.Skip(now);
             RecordAndRestartWork(now, false);
+            Publish();
+        }
+
+        internal void ToggleMeeting()
+        {
+            DateTime now = _clock.Now;
+            if (_session.GetState(now).Phase == TimerPhase.Work)
+            {
+                _session.StartMeeting(now);
+                SwitchActivity(now, ActivityKind.Meeting);
+            }
+            else if (_session.GetState(now).Phase == TimerPhase.Meeting)
+            {
+                _session.EndMeeting(now);
+                SwitchActivity(now, ActivityKind.Work);
+            }
+            else throw new InvalidOperationException();
             Publish();
         }
 
@@ -134,6 +152,7 @@ namespace TimeTracker.Classic.Application
         private void BeginWork(DateTime now, bool beginContinuous)
         {
             _currentPeriodStartedAt = now;
+            _currentActivityKind = ActivityKind.Work;
             if (beginContinuous || !_continuousWorkStartedAt.HasValue) _continuousWorkStartedAt = now;
         }
 
@@ -146,9 +165,16 @@ namespace TimeTracker.Classic.Application
         private void EndWork(DateTime now, bool endContinuous, TimerState state)
         {
             if (_currentPeriodStartedAt.HasValue)
-                _history.Add(new HistoryEntry(ActivityKind.Work, _currentPeriodStartedAt.Value, now, TimeSpan.Zero, state.ShortBreakBalance, state.LongBreakBalance));
+                _history.Add(new HistoryEntry(_currentActivityKind, _currentPeriodStartedAt.Value, now, TimeSpan.Zero, state.ShortBreakBalance, state.LongBreakBalance));
             _currentPeriodStartedAt = null;
             if (endContinuous) _continuousWorkStartedAt = null;
+        }
+
+        private void SwitchActivity(DateTime now, ActivityKind next)
+        {
+            EndWork(now, false, _session.GetState(now));
+            _currentPeriodStartedAt = now;
+            _currentActivityKind = next;
         }
 
         private void BeginBreak(DateTime now, TimerState state)

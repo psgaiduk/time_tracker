@@ -47,6 +47,7 @@ namespace TimeTracker.Classic.Presentation
         private static Color GetColor(ActivityKind kind)
         {
             if (kind == ActivityKind.Work) return Color.Firebrick;
+            if (kind == ActivityKind.Meeting) return Color.MediumPurple;
             if (kind == ActivityKind.LongBreak) return Color.RoyalBlue;
             return Color.SeaGreen;
         }

@@ -10,7 +10,7 @@ namespace TimeTracker.Classic.Presentation
     {
         internal static string GetText(TimerState state, DailyWorkStats stats)
         {
-            if (state.Phase != TimerPhase.Work && state.Phase != TimerPhase.AwaitingBreakDecision) return String.Empty;
+            if (state.Phase != TimerPhase.Work && state.Phase != TimerPhase.Meeting && state.Phase != TimerPhase.AwaitingBreakDecision) return String.Empty;
             int minutes = (int)stats.ContinuousWork.TotalMinutes;
             return minutes > 99 ? "99+" : minutes.ToString();
         }
@@ -22,10 +22,7 @@ namespace TimeTracker.Classic.Presentation
 
         internal static Icon Create(TimerState state, DailyWorkStats stats)
         {
-            Color background = Color.DimGray;
-            if (state.Phase == TimerPhase.Work || state.Phase == TimerPhase.AwaitingBreakDecision) background = Color.Firebrick;
-            if (state.Phase == TimerPhase.WorkSummary) background = Color.RoyalBlue;
-            if (state.Phase == TimerPhase.ShortBreak || state.Phase == TimerPhase.LongBreak) background = Color.SeaGreen;
+            Color background = GetBackgroundColor(state);
 
             using (Bitmap bitmap = new Bitmap(16, 16))
             using (Graphics graphics = Graphics.FromImage(bitmap))
@@ -46,6 +43,15 @@ namespace TimeTracker.Classic.Presentation
                 try { return (Icon)Icon.FromHandle(handle).Clone(); }
                 finally { DestroyIcon(handle); }
             }
+        }
+
+        internal static Color GetBackgroundColor(TimerState state)
+        {
+            if (state.Phase == TimerPhase.Work || state.Phase == TimerPhase.AwaitingBreakDecision) return Color.Firebrick;
+            if (state.Phase == TimerPhase.Meeting) return Color.MediumPurple;
+            if (state.Phase == TimerPhase.WorkSummary) return Color.RoyalBlue;
+            if (state.Phase == TimerPhase.ShortBreak || state.Phase == TimerPhase.LongBreak) return Color.SeaGreen;
+            return Color.DimGray;
         }
 
         [DllImport("user32.dll")]

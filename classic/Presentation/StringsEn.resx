@@ -10,6 +10,9 @@
   <data name="WorkDayWorkFormat" xml:space="preserve"><value>Work: {0}</value></data>
   <data name="WorkDayRestFormat" xml:space="preserve"><value>Rest: {0}</value></data>
   <data name="NoWorkDayActivity" xml:space="preserve"><value>No recorded activity today</value></data>
-  <data name="WorkDayLegend" xml:space="preserve"><value>Red — work   Green — short break   Blue — long break   Gray — untracked gap</value></data>
+  <data name="WorkDayTotalWorkFormat" xml:space="preserve"><value>Total work: {0}</value></data>
+  <data name="WorkDayMeetingFormat" xml:space="preserve"><value>Meetings: {0}</value></data>
+  <data name="Meeting" xml:space="preserve"><value>Meeting</value></data>
+  <data name="WorkDayLegend" xml:space="preserve"><value>Red — work   Purple — meeting   Green — short break   Blue — long break   Gray — untracked gap</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
 </root>

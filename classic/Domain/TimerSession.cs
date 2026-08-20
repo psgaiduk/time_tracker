@@ -62,6 +62,24 @@ namespace TimeTracker.Classic.Domain
             Start(TimerPhase.Work, _rules.WorkDuration, now);
         }
 
+        internal void StartMeeting(DateTime now)
+        {
+            if (_phase != TimerPhase.Work) throw new InvalidOperationException();
+            _phase = TimerPhase.Meeting;
+        }
+
+        internal void EndMeeting(DateTime now)
+        {
+            if (_phase != TimerPhase.Meeting) throw new InvalidOperationException();
+            if (_deadline.HasValue && now >= _deadline.Value)
+            {
+                _completedWorkIntervals++;
+                _phase = TimerPhase.AwaitingBreakDecision;
+                _deadline = null;
+            }
+            else _phase = TimerPhase.Work;
+        }
+
         internal void Rest(DateTime now)
         {
             EnsureDecision();
@@ -75,7 +93,7 @@ namespace TimeTracker.Classic.Domain
 
         internal void StartShortBreak(DateTime now)
         {
-            if (_phase != TimerPhase.Work) throw new InvalidOperationException();
+            if (_phase != TimerPhase.Work && _phase != TimerPhase.Meeting) throw new InvalidOperationException();
             StartAccumulatedBreak(now);
         }
 
@@ -95,7 +113,7 @@ namespace TimeTracker.Classic.Domain
 
         internal void Stop(DateTime now)
         {
-            if (_phase == TimerPhase.Work || _phase == TimerPhase.AwaitingBreakDecision || _phase == TimerPhase.WorkSummary)
+            if (_phase == TimerPhase.Work || _phase == TimerPhase.Meeting || _phase == TimerPhase.AwaitingBreakDecision || _phase == TimerPhase.WorkSummary)
                 AccrueWork(now);
             else if (IsBreak()) SettleBreak(now);
             _phase = TimerPhase.Idle;

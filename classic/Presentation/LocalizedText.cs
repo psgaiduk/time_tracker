@@ -19,6 +19,9 @@ namespace TimeTracker.Classic.Presentation
         internal static string WorkDayRangeFormat { get { return Get("WorkDayRangeFormat"); } }
         internal static string WorkDayTotalFormat { get { return Get("WorkDayTotalFormat"); } }
         internal static string WorkDayWorkFormat { get { return Get("WorkDayWorkFormat"); } }
+        internal static string WorkDayTotalWorkFormat { get { return Get("WorkDayTotalWorkFormat"); } }
+        internal static string WorkDayMeetingFormat { get { return Get("WorkDayMeetingFormat"); } }
+        internal static string Meeting { get { return Get("Meeting"); } }
         internal static string WorkDayRestFormat { get { return Get("WorkDayRestFormat"); } }
         internal static string NoWorkDayActivity { get { return Get("NoWorkDayActivity"); } }
         internal static string WorkDayLegend { get { return Get("WorkDayLegend"); } }

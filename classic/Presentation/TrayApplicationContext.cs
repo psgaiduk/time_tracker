@@ -16,6 +16,7 @@ namespace TimeTracker.Classic.Presentation
         private readonly MenuItem _statusItem;
         private readonly MenuItem _statsItem;
         private readonly Timer _timer;
+        private readonly Timer _singleClickTimer;
         private readonly BreakOverlayForm _overlay;
         private readonly AppSettings _settings;
         private Icon _dynamicIcon;
@@ -41,7 +42,15 @@ namespace TimeTracker.Classic.Presentation
             menu.MenuItems.Add("-");
             menu.MenuItems.Add("Выход", delegate { Exit(); });
             _trayIcon = new NotifyIcon { Icon = SystemIcons.Application, Text = "Time Tracker", ContextMenu = menu, Visible = true };
-            _trayIcon.DoubleClick += delegate { HandleTrayDoubleClick(); };
+            _singleClickTimer = new Timer { Interval = SystemInformation.DoubleClickTime };
+            _singleClickTimer.Tick += delegate { _singleClickTimer.Stop(); HandleTraySingleClick(); };
+            _trayIcon.MouseClick += delegate(object sender, MouseEventArgs args)
+            {
+                if (args.Button != MouseButtons.Left) return;
+                _singleClickTimer.Stop();
+                _singleClickTimer.Start();
+            };
+            _trayIcon.DoubleClick += delegate { _singleClickTimer.Stop(); HandleTrayDoubleClick(); };
             _coordinator.StateChanged += delegate { UpdateTrayStatus(); };
 
             _timer = new Timer { Interval = 250 };
@@ -58,12 +67,18 @@ namespace TimeTracker.Classic.Presentation
 
         private void HandleTrayDoubleClick()
         {
-            if (_coordinator.State.Phase == TimerPhase.Work)
+            if (_coordinator.State.Phase == TimerPhase.Work || _coordinator.State.Phase == TimerPhase.Meeting)
             {
                 _coordinator.StartShortBreak();
                 return;
             }
             StartWork();
+        }
+
+        private void HandleTraySingleClick()
+        {
+            if (_coordinator.State.Phase != TimerPhase.Work && _coordinator.State.Phase != TimerPhase.Meeting) return;
+            _coordinator.ToggleMeeting();
         }
 
         private void UpdateTrayStatus()
@@ -115,6 +130,8 @@ namespace TimeTracker.Classic.Presentation
         private void Exit()
         {
             _timer.Stop();
+            _singleClickTimer.Stop();
+            _singleClickTimer.Dispose();
             _coordinator.Stop();
             _trayIcon.Visible = false;
             _trayIcon.Dispose();

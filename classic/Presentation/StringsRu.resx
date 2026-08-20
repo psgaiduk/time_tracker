@@ -10,6 +10,9 @@
   <data name="WorkDayWorkFormat" xml:space="preserve"><value>Работа: {0}</value></data>
   <data name="WorkDayRestFormat" xml:space="preserve"><value>Отдых: {0}</value></data>
   <data name="NoWorkDayActivity" xml:space="preserve"><value>Сегодня ещё нет записанной активности</value></data>
-  <data name="WorkDayLegend" xml:space="preserve"><value>Красный — работа   Зелёный — малый отдых   Синий — большой отдых   Серый — перерыв в учёте</value></data>
+  <data name="WorkDayTotalWorkFormat" xml:space="preserve"><value>Всего работа: {0}</value></data>
+  <data name="WorkDayMeetingFormat" xml:space="preserve"><value>Созвоны: {0}</value></data>
+  <data name="Meeting" xml:space="preserve"><value>Созвон</value></data>
+  <data name="WorkDayLegend" xml:space="preserve"><value>Красный — работа   Фиолетовый — созвон   Зелёный — малый отдых   Синий — большой отдых   Серый — перерыв в учёте</value></data>
   <data name="Close" xml:space="preserve"><value>Закрыть</value></data>
 </root>
