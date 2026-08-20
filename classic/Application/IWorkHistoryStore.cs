@@ -8,6 +8,7 @@ namespace TimeTracker.Classic.Application
         void Add(HistoryEntry entry);
         TimeSpan GetTotal(DateTime day);
         BreakBalances GetLatestBalances();
+        DateTime? GetLatestFinishedAt();
         IList<HistoryEntry> GetEntries(DateTime day);
     }
 }

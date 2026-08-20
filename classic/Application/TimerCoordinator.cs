@@ -19,6 +19,9 @@ namespace TimeTracker.Classic.Application
             _clock = clock;
             _history = history;
             BreakBalances balances = history.GetLatestBalances();
+            DateTime? latestFinishedAt = history.GetLatestFinishedAt();
+            if (latestFinishedAt.HasValue && clock.Now > latestFinishedAt.Value)
+                balances = balances.AfterUntrackedRest(clock.Now - latestFinishedAt.Value);
             _session = new TimerSession(rules, balances.ShortBreak, balances.LongBreak);
             Publish();
         }

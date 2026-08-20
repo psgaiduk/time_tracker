@@ -38,6 +38,7 @@ namespace TimeTracker.Classic.Tests
                 Stop_DuringWork_RecordsHistoryAndEarnedBalances();
                 WorkDaySummary_CalculatesSpanWorkAndBreakTotals();
                 FinishWorkDay_StopsCurrentPeriodAndReturnsSummary();
+                Coordinator_OfflineTimeReducesBothBalancesIndependently();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -388,6 +389,17 @@ namespace TimeTracker.Classic.Tests
             AssertEqual(1, summary.Entries.Count, "Finished day timeline entry");
         }
 
+        private static void Coordinator_OfflineTimeReducesBothBalancesIndependently()
+        {
+            DateTime lastActivity = new DateTime(2026, 8, 19, 18, 0, 0);
+            FakeHistoryStore history = new FakeHistoryStore(
+                new BreakBalances(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(40)), lastActivity);
+            TimerCoordinator coordinator = new TimerCoordinator(
+                new FakeClock(lastActivity.AddMinutes(20)), TimerRules.Default(), history);
+            AssertEqual(TimeSpan.Zero, coordinator.State.ShortBreakBalance, "Offline time clears smaller short balance");
+            AssertEqual(TimeSpan.FromMinutes(20), coordinator.State.LongBreakBalance, "Offline time independently reduces long balance");
+        }
+
         private sealed class FakeClock : IClock
         {
             internal FakeClock(DateTime now) { Now = now; }
@@ -399,16 +411,20 @@ namespace TimeTracker.Classic.Tests
             internal TimeSpan Total;
             internal readonly List<HistoryEntry> Entries = new List<HistoryEntry>();
             private BreakBalances _balances = new BreakBalances(TimeSpan.Zero, TimeSpan.Zero);
+            private DateTime? _latestFinishedAt;
             internal FakeHistoryStore() { }
             internal FakeHistoryStore(BreakBalances balances) { _balances = balances; }
+            internal FakeHistoryStore(BreakBalances balances, DateTime latestFinishedAt) { _balances = balances; _latestFinishedAt = latestFinishedAt; }
             public void Add(HistoryEntry entry)
             {
                 if (entry.Kind == ActivityKind.Work) Total += entry.FinishedAt - entry.StartedAt;
                 Entries.Add(entry);
                 _balances = new BreakBalances(entry.ShortBreakBalance, entry.LongBreakBalance);
+                _latestFinishedAt = entry.FinishedAt;
             }
             public TimeSpan GetTotal(DateTime day) { return Total; }
             public BreakBalances GetLatestBalances() { return _balances; }
+            public DateTime? GetLatestFinishedAt() { return _latestFinishedAt; }
             public IList<HistoryEntry> GetEntries(DateTime day)
             {
                 List<HistoryEntry> result = new List<HistoryEntry>();

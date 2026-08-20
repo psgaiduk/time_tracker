@@ -49,6 +49,12 @@ namespace TimeTracker.Classic.Infrastructure
             return new BreakBalances(latest.ShortBreakBalance, latest.LongBreakBalance);
         }
 
+        public DateTime? GetLatestFinishedAt()
+        {
+            List<HistoryEntry> entries = ReadEntries();
+            return entries.Count == 0 ? (DateTime?)null : entries[entries.Count - 1].FinishedAt;
+        }
+
         public IList<HistoryEntry> GetEntries(DateTime day)
         {
             DateTime from = day.Date;
