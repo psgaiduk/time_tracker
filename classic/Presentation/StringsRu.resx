@@ -3,4 +3,13 @@
   <data name="BreakOverdue" xml:space="preserve">
     <value>Отдых просрочен</value>
   </data>
+  <data name="FinishWorkDay" xml:space="preserve"><value>Завершить рабочий день</value></data>
+  <data name="WorkDaySummaryTitle" xml:space="preserve"><value>Итоги рабочего дня</value></data>
+  <data name="WorkDayRangeFormat" xml:space="preserve"><value>Рабочий день: {0:HH:mm} — {1:HH:mm}</value></data>
+  <data name="WorkDayTotalFormat" xml:space="preserve"><value>От начала до конца: {0}</value></data>
+  <data name="WorkDayWorkFormat" xml:space="preserve"><value>Работа: {0}</value></data>
+  <data name="WorkDayRestFormat" xml:space="preserve"><value>Отдых: {0}</value></data>
+  <data name="NoWorkDayActivity" xml:space="preserve"><value>Сегодня ещё нет записанной активности</value></data>
+  <data name="WorkDayLegend" xml:space="preserve"><value>Красный — работа   Зелёный — малый отдых   Синий — большой отдых   Серый — перерыв в учёте</value></data>
+  <data name="Close" xml:space="preserve"><value>Закрыть</value></data>
 </root>

@@ -107,6 +107,13 @@ namespace TimeTracker.Classic.Application
             Publish();
         }
 
+        internal WorkDaySummary FinishWorkDay()
+        {
+            DateTime now = _clock.Now;
+            Stop();
+            return WorkDaySummary.Create(_history.GetEntries(now.Date), now);
+        }
+
         private void Publish()
         {
             DateTime now = _clock.Now;

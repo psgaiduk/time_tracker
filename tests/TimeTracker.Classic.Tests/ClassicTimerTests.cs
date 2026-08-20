@@ -36,6 +36,8 @@ namespace TimeTracker.Classic.Tests
                 EndBreak_RecordsTypedHistoryAndBalances();
                 Coordinator_RestoresBalancesFromHistory();
                 Stop_DuringWork_RecordsHistoryAndEarnedBalances();
+                WorkDaySummary_CalculatesSpanWorkAndBreakTotals();
+                FinishWorkDay_StopsCurrentPeriodAndReturnsSummary();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -357,6 +359,35 @@ namespace TimeTracker.Classic.Tests
             AssertEqual(TimeSpan.FromMinutes(5), history.GetLatestBalances().LongBreak, "Long balance saved on application exit");
         }
 
+        private static void WorkDaySummary_CalculatesSpanWorkAndBreakTotals()
+        {
+            DateTime day = new DateTime(2026, 8, 20);
+            List<HistoryEntry> entries = new List<HistoryEntry>();
+            entries.Add(new HistoryEntry(ActivityKind.Work, day.AddHours(9), day.AddHours(10), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            entries.Add(new HistoryEntry(ActivityKind.ShortBreak, day.AddHours(10), day.AddHours(10).AddMinutes(15), TimeSpan.FromMinutes(15), TimeSpan.Zero, TimeSpan.Zero));
+            entries.Add(new HistoryEntry(ActivityKind.Work, day.AddHours(10).AddMinutes(30), day.AddHours(12), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            WorkDaySummary summary = WorkDaySummary.Create(entries, day.AddHours(12));
+            AssertEqual(day.AddHours(9), summary.StartedAt, "Work day start");
+            AssertEqual(TimeSpan.FromHours(3), summary.TotalDuration, "Work day span");
+            AssertEqual(TimeSpan.FromHours(2.5), summary.WorkDuration, "Work total");
+            AssertEqual(TimeSpan.FromMinutes(15), summary.BreakDuration, "Break total");
+        }
+
+        private static void FinishWorkDay_StopsCurrentPeriodAndReturnsSummary()
+        {
+            DateTime start = new DateTime(2026, 8, 20, 9, 0, 0);
+            FakeClock clock = new FakeClock(start);
+            FakeHistoryStore history = new FakeHistoryStore();
+            TimerCoordinator coordinator = new TimerCoordinator(clock, TimerRules.Default(), history);
+            coordinator.Start();
+            clock.Now = start.AddMinutes(40);
+            WorkDaySummary summary = coordinator.FinishWorkDay();
+            AssertEqual(TimerPhase.Idle, coordinator.State.Phase, "Idle after finishing work day");
+            AssertEqual(TimeSpan.FromMinutes(40), summary.TotalDuration, "Finished day duration");
+            AssertEqual(TimeSpan.FromMinutes(40), summary.WorkDuration, "Finished day work");
+            AssertEqual(1, summary.Entries.Count, "Finished day timeline entry");
+        }
+
         private sealed class FakeClock : IClock
         {
             internal FakeClock(DateTime now) { Now = now; }
@@ -378,6 +409,15 @@ namespace TimeTracker.Classic.Tests
             }
             public TimeSpan GetTotal(DateTime day) { return Total; }
             public BreakBalances GetLatestBalances() { return _balances; }
+            public IList<HistoryEntry> GetEntries(DateTime day)
+            {
+                List<HistoryEntry> result = new List<HistoryEntry>();
+                DateTime from = day.Date;
+                DateTime to = from.AddDays(1);
+                foreach (HistoryEntry entry in Entries)
+                    if (entry.FinishedAt > from && entry.StartedAt < to) result.Add(entry);
+                return result;
+            }
         }
 
         private static void AssertEqual(object expected, object actual, string name)

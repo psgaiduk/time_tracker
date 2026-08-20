@@ -49,6 +49,21 @@ namespace TimeTracker.Classic.Infrastructure
             return new BreakBalances(latest.ShortBreakBalance, latest.LongBreakBalance);
         }
 
+        public IList<HistoryEntry> GetEntries(DateTime day)
+        {
+            DateTime from = day.Date;
+            DateTime to = from.AddDays(1);
+            List<HistoryEntry> result = new List<HistoryEntry>();
+            foreach (HistoryEntry entry in ReadEntries())
+            {
+                DateTime start = entry.StartedAt < from ? from : entry.StartedAt;
+                DateTime finish = entry.FinishedAt > to ? to : entry.FinishedAt;
+                if (finish <= start) continue;
+                result.Add(new HistoryEntry(entry.Kind, start, finish, entry.PlannedDuration, entry.ShortBreakBalance, entry.LongBreakBalance));
+            }
+            return result;
+        }
+
         private List<HistoryEntry> ReadEntries()
         {
             List<HistoryEntry> result = new List<HistoryEntry>();

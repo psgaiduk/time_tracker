@@ -36,6 +36,7 @@ namespace TimeTracker.Classic.Presentation
             menu.MenuItems.Add(_statusItem);
             _statsItem = new MenuItem("Сегодня: 00:00:00") { Enabled = false };
             menu.MenuItems.Add(_statsItem);
+            menu.MenuItems.Add(LocalizedText.FinishWorkDay, delegate { FinishWorkDay(); });
             menu.MenuItems.Add("Настройки", delegate { ShowSettings(); });
             menu.MenuItems.Add("-");
             menu.MenuItems.Add("Выход", delegate { Exit(); });
@@ -102,6 +103,13 @@ namespace TimeTracker.Classic.Presentation
                 _overlay.ApplyCaptureSetting(_settings.HideOverlayFromCapture);
                 _overlay.ApplyVirtualDesktopSetting(_settings.ShowOverlayOnAllVirtualDesktops);
             }
+        }
+
+        private void FinishWorkDay()
+        {
+            WorkDaySummary summary = _coordinator.FinishWorkDay();
+            using (WorkDaySummaryForm form = new WorkDaySummaryForm(summary))
+                form.ShowDialog();
         }
 
         private void Exit()

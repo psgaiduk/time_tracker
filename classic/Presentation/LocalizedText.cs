@@ -14,6 +14,16 @@ namespace TimeTracker.Classic.Presentation
             get { return _breakOverdue; }
         }
 
+        internal static string FinishWorkDay { get { return Get("FinishWorkDay"); } }
+        internal static string WorkDaySummaryTitle { get { return Get("WorkDaySummaryTitle"); } }
+        internal static string WorkDayRangeFormat { get { return Get("WorkDayRangeFormat"); } }
+        internal static string WorkDayTotalFormat { get { return Get("WorkDayTotalFormat"); } }
+        internal static string WorkDayWorkFormat { get { return Get("WorkDayWorkFormat"); } }
+        internal static string WorkDayRestFormat { get { return Get("WorkDayRestFormat"); } }
+        internal static string NoWorkDayActivity { get { return Get("NoWorkDayActivity"); } }
+        internal static string WorkDayLegend { get { return Get("WorkDayLegend"); } }
+        internal static string Close { get { return Get("Close"); } }
+
         private static string Get(string key)
         {
             string resourceName = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ru" ? "StringsRu.resx" : "StringsEn.resx";

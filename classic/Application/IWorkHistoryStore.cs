@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace TimeTracker.Classic.Application
 {
@@ -7,5 +8,6 @@ namespace TimeTracker.Classic.Application
         void Add(HistoryEntry entry);
         TimeSpan GetTotal(DateTime day);
         BreakBalances GetLatestBalances();
+        IList<HistoryEntry> GetEntries(DateTime day);
     }
 }
