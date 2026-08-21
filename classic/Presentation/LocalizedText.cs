@@ -24,7 +24,12 @@ namespace TimeTracker.Classic.Presentation
         internal static string Meeting { get { return Get("Meeting"); } }
         internal static string WorkDayRestFormat { get { return Get("WorkDayRestFormat"); } }
         internal static string NoWorkDayActivity { get { return Get("NoWorkDayActivity"); } }
-        internal static string WorkDayLegend { get { return Get("WorkDayLegend"); } }
+        internal static string TotalWork { get { return Get("TotalWork"); } }
+        internal static string Work { get { return Get("Work"); } }
+        internal static string Meetings { get { return Get("Meetings"); } }
+        internal static string TotalRest { get { return Get("TotalRest"); } }
+        internal static string ShortBreaks { get { return Get("ShortBreaks"); } }
+        internal static string LongBreaks { get { return Get("LongBreaks"); } }
         internal static string Close { get { return Get("Close"); } }
 
         private static string Get(string key)

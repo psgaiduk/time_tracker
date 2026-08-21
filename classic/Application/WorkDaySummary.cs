@@ -5,13 +5,14 @@ namespace TimeTracker.Classic.Application
 {
     internal sealed class WorkDaySummary
     {
-        private WorkDaySummary(DateTime startedAt, DateTime finishedAt, TimeSpan workDuration, TimeSpan meetingDuration, TimeSpan breakDuration, IList<HistoryEntry> entries)
+        private WorkDaySummary(DateTime startedAt, DateTime finishedAt, TimeSpan workDuration, TimeSpan meetingDuration, TimeSpan shortBreakDuration, TimeSpan longBreakDuration, IList<HistoryEntry> entries)
         {
             StartedAt = startedAt;
             FinishedAt = finishedAt;
             WorkDuration = workDuration;
             MeetingDuration = meetingDuration;
-            BreakDuration = breakDuration;
+            ShortBreakDuration = shortBreakDuration;
+            LongBreakDuration = longBreakDuration;
             Entries = entries;
         }
 
@@ -21,7 +22,9 @@ namespace TimeTracker.Classic.Application
         internal TimeSpan WorkDuration { get; private set; }
         internal TimeSpan MeetingDuration { get; private set; }
         internal TimeSpan TotalWorkDuration { get { return WorkDuration + MeetingDuration; } }
-        internal TimeSpan BreakDuration { get; private set; }
+        internal TimeSpan ShortBreakDuration { get; private set; }
+        internal TimeSpan LongBreakDuration { get; private set; }
+        internal TimeSpan BreakDuration { get { return ShortBreakDuration + LongBreakDuration; } }
         internal IList<HistoryEntry> Entries { get; private set; }
         internal bool HasEntries { get { return Entries.Count > 0; } }
 
@@ -32,15 +35,17 @@ namespace TimeTracker.Classic.Application
             DateTime startedAt = entries.Count == 0 ? finishedAt : entries[0].StartedAt;
             TimeSpan work = TimeSpan.Zero;
             TimeSpan meetings = TimeSpan.Zero;
-            TimeSpan rest = TimeSpan.Zero;
+            TimeSpan shortBreaks = TimeSpan.Zero;
+            TimeSpan longBreaks = TimeSpan.Zero;
             foreach (HistoryEntry entry in entries)
             {
                 TimeSpan duration = entry.FinishedAt - entry.StartedAt;
                 if (entry.Kind == ActivityKind.Work) work += duration;
                 else if (entry.Kind == ActivityKind.Meeting) meetings += duration;
-                else rest += duration;
+                else if (entry.Kind == ActivityKind.ShortBreak) shortBreaks += duration;
+                else if (entry.Kind == ActivityKind.LongBreak) longBreaks += duration;
             }
-            return new WorkDaySummary(startedAt, finishedAt, work, meetings, rest, entries.AsReadOnly());
+            return new WorkDaySummary(startedAt, finishedAt, work, meetings, shortBreaks, longBreaks, entries.AsReadOnly());
         }
     }
 }

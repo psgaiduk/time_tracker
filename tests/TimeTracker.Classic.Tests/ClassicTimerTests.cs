@@ -451,12 +451,15 @@ namespace TimeTracker.Classic.Tests
             List<HistoryEntry> entries = new List<HistoryEntry>();
             entries.Add(new HistoryEntry(ActivityKind.Work, start, start.AddHours(2), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
             entries.Add(new HistoryEntry(ActivityKind.Meeting, start.AddHours(2), start.AddHours(3), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
-            entries.Add(new HistoryEntry(ActivityKind.ShortBreak, start.AddHours(3), start.AddHours(3.5), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            entries.Add(new HistoryEntry(ActivityKind.ShortBreak, start.AddHours(3), start.AddHours(3.25), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            entries.Add(new HistoryEntry(ActivityKind.LongBreak, start.AddHours(3.25), start.AddHours(3.5), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
             WorkDaySummary summary = WorkDaySummary.Create(entries, start.AddHours(3.5));
             AssertEqual(TimeSpan.FromHours(3), summary.TotalWorkDuration, "Total work includes meetings");
             AssertEqual(TimeSpan.FromHours(2), summary.WorkDuration, "Focused work total");
             AssertEqual(TimeSpan.FromHours(1), summary.MeetingDuration, "Meeting total");
             AssertEqual(TimeSpan.FromMinutes(30), summary.BreakDuration, "Rest total excludes meetings");
+            AssertEqual(TimeSpan.FromMinutes(15), summary.ShortBreakDuration, "Short break total");
+            AssertEqual(TimeSpan.FromMinutes(15), summary.LongBreakDuration, "Long break total");
         }
 
         private static void TrayIcon_Meeting_IsPurpleAndShowsContinuousMinutes()
