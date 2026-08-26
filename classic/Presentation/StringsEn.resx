@@ -20,4 +20,11 @@
   <data name="ShortBreaks" xml:space="preserve"><value>Short</value></data>
   <data name="LongBreaks" xml:space="preserve"><value>Long</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="AutomaticMeetingEnabled" xml:space="preserve"><value>Automatically enable Meeting for active applications</value></data>
+  <data name="AddRunningApplication" xml:space="preserve"><value>Add running</value></data>
+  <data name="ChooseExecutable" xml:space="preserve"><value>Choose EXE</value></data>
+  <data name="Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="RunningApplications" xml:space="preserve"><value>Running applications</value></data>
+  <data name="Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
 </root>

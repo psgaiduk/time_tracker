@@ -14,11 +14,15 @@ namespace TimeTracker.Classic.Presentation
         private readonly CheckBox[] _longBreakDays;
         private readonly CheckBox _workSummaryEnabled;
         private readonly TextBox _workSummaryUrl;
+        private readonly IApplicationCatalog _applicationCatalog;
+        private readonly CheckBox _automaticMeetingEnabled;
+        private readonly ListBox _automaticMeetingApplications;
 
-        internal SettingsForm(AppSettings settings)
+        internal SettingsForm(AppSettings settings, IApplicationCatalog applicationCatalog)
         {
+            _applicationCatalog = applicationCatalog;
             Text = "Настройки Time Tracker";
-            ClientSize = new Size(430, 327);
+            ClientSize = new Size(570, 535);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -44,9 +48,18 @@ namespace TimeTracker.Classic.Presentation
             Label urlLabel = new Label { Left = 40, Top = 222, Width = 80, Text = "Ссылка:" };
             _workSummaryUrl = new TextBox { Left = 120, Top = 218, Width = 290, Text = settings.WorkSummaryUrl ?? String.Empty, Enabled = settings.WorkSummaryEnabled };
             _workSummaryEnabled.CheckedChanged += delegate { _workSummaryUrl.Enabled = _workSummaryEnabled.Checked; };
-            Button save = new Button { Left = 245, Top = 277, Width = 85, Text = "Сохранить", DialogResult = DialogResult.OK };
-            Button cancel = new Button { Left = 340, Top = 277, Width = 75, Text = "Отмена", DialogResult = DialogResult.Cancel };
-            Controls.AddRange(new Control[] { _hideFromCapture, _showOnAllVirtualDesktops, _startWithWindows, _longBreakEnabled, _workSummaryEnabled, urlLabel, _workSummaryUrl, save, cancel });
+            _automaticMeetingEnabled = new CheckBox { Left = 20, Top = 260, Width = 500, Text = LocalizedText.AutomaticMeetingEnabled, Checked = settings.AutomaticMeetingEnabled };
+            _automaticMeetingApplications = new ListBox { Left = 40, Top = 290, Width = 510, Height = 120 };
+            foreach (string path in settings.AutomaticMeetingApplications) _automaticMeetingApplications.Items.Add(path);
+            Button addRunning = new Button { Left = 40, Top = 420, Width = 160, Text = LocalizedText.AddRunningApplication };
+            Button addExecutable = new Button { Left = 210, Top = 420, Width = 150, Text = LocalizedText.ChooseExecutable };
+            Button remove = new Button { Left = 370, Top = 420, Width = 100, Text = LocalizedText.Remove };
+            addRunning.Click += delegate { AddRunningApplication(); };
+            addExecutable.Click += delegate { AddExecutable(); };
+            remove.Click += delegate { if (_automaticMeetingApplications.SelectedIndex >= 0) _automaticMeetingApplications.Items.RemoveAt(_automaticMeetingApplications.SelectedIndex); };
+            Button save = new Button { Left = 380, Top = 485, Width = 85, Text = "Сохранить", DialogResult = DialogResult.OK };
+            Button cancel = new Button { Left = 475, Top = 485, Width = 75, Text = "Отмена", DialogResult = DialogResult.Cancel };
+            Controls.AddRange(new Control[] { _hideFromCapture, _showOnAllVirtualDesktops, _startWithWindows, _longBreakEnabled, _workSummaryEnabled, urlLabel, _workSummaryUrl, _automaticMeetingEnabled, _automaticMeetingApplications, addRunning, addExecutable, remove, save, cancel });
             AcceptButton = save;
             CancelButton = cancel;
         }
@@ -66,6 +79,28 @@ namespace TimeTracker.Classic.Presentation
             settings.Sunday = _longBreakDays[6].Checked;
             settings.WorkSummaryEnabled = _workSummaryEnabled.Checked;
             settings.WorkSummaryUrl = _workSummaryUrl.Text.Trim();
+            settings.AutomaticMeetingEnabled = _automaticMeetingEnabled.Checked;
+            settings.AutomaticMeetingApplications.Clear();
+            foreach (object item in _automaticMeetingApplications.Items) settings.AutomaticMeetingApplications.Add(item.ToString());
+        }
+
+        private void AddRunningApplication()
+        {
+            using (RunningApplicationForm form = new RunningApplicationForm(_applicationCatalog))
+                if (form.ShowDialog(this) == DialogResult.OK && form.SelectedApplication != null) AddPath(form.SelectedApplication.ExecutablePath);
+        }
+
+        private void AddExecutable()
+        {
+            using (OpenFileDialog dialog = new OpenFileDialog { Filter = "Applications (*.exe)|*.exe", CheckFileExists = true })
+                if (dialog.ShowDialog(this) == DialogResult.OK) AddPath(dialog.FileName);
+        }
+
+        private void AddPath(string path)
+        {
+            foreach (object item in _automaticMeetingApplications.Items)
+                if (String.Equals(item.ToString(), path, StringComparison.OrdinalIgnoreCase)) return;
+            _automaticMeetingApplications.Items.Add(path);
         }
     }
 }

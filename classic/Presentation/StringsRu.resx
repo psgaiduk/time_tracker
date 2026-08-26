@@ -20,4 +20,11 @@
   <data name="ShortBreaks" xml:space="preserve"><value>Короткий</value></data>
   <data name="LongBreaks" xml:space="preserve"><value>Большой</value></data>
   <data name="Close" xml:space="preserve"><value>Закрыть</value></data>
+  <data name="AutomaticMeetingEnabled" xml:space="preserve"><value>Автоматически включать «Созвон» для активных приложений</value></data>
+  <data name="AddRunningApplication" xml:space="preserve"><value>Добавить запущенное</value></data>
+  <data name="ChooseExecutable" xml:space="preserve"><value>Выбрать EXE</value></data>
+  <data name="Remove" xml:space="preserve"><value>Удалить</value></data>
+  <data name="RunningApplications" xml:space="preserve"><value>Запущенные приложения</value></data>
+  <data name="Add" xml:space="preserve"><value>Добавить</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Отмена</value></data>
 </root>

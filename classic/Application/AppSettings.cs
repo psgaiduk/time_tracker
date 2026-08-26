@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace TimeTracker.Classic.Application
 {
@@ -13,6 +14,7 @@ namespace TimeTracker.Classic.Application
             Monday = Tuesday = Wednesday = Thursday = Friday = Saturday = Sunday = true;
             WorkSummaryEnabled = true;
             WorkSummaryUrl = String.Empty;
+            AutomaticMeetingApplications = new List<string>();
         }
 
         internal bool HideOverlayFromCapture { get; set; }
@@ -28,6 +30,16 @@ namespace TimeTracker.Classic.Application
         internal bool Sunday { get; set; }
         internal bool WorkSummaryEnabled { get; set; }
         internal string WorkSummaryUrl { get; set; }
+        internal bool AutomaticMeetingEnabled { get; set; }
+        internal List<string> AutomaticMeetingApplications { get; private set; }
+
+        internal bool IsAutomaticMeetingApplication(string executablePath)
+        {
+            if (!AutomaticMeetingEnabled || String.IsNullOrEmpty(executablePath)) return false;
+            foreach (string path in AutomaticMeetingApplications)
+                if (String.Equals(path, executablePath, StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
 
         internal bool IsLongBreakAllowed(System.DateTime now)
         {

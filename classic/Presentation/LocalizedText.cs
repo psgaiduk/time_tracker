@@ -31,6 +31,13 @@ namespace TimeTracker.Classic.Presentation
         internal static string ShortBreaks { get { return Get("ShortBreaks"); } }
         internal static string LongBreaks { get { return Get("LongBreaks"); } }
         internal static string Close { get { return Get("Close"); } }
+        internal static string AutomaticMeetingEnabled { get { return Get("AutomaticMeetingEnabled"); } }
+        internal static string AddRunningApplication { get { return Get("AddRunningApplication"); } }
+        internal static string ChooseExecutable { get { return Get("ChooseExecutable"); } }
+        internal static string Remove { get { return Get("Remove"); } }
+        internal static string RunningApplications { get { return Get("RunningApplications"); } }
+        internal static string Add { get { return Get("Add"); } }
+        internal static string Cancel { get { return Get("Cancel"); } }
 
         private static string Get(string key)
         {

@@ -24,8 +24,10 @@ namespace TimeTracker.Classic
             TimerCoordinator coordinator = new TimerCoordinator(new SystemClock(), rules, new CsvWorkHistoryStore());
             VirtualDesktopWindowPinning windowPinning = new VirtualDesktopWindowPinning();
             WindowsNotificationSound notificationSound = new WindowsNotificationSound();
+            WindowsForegroundApplication foregroundApplication = new WindowsForegroundApplication();
+            WindowsApplicationCatalog applicationCatalog = new WindowsApplicationCatalog();
             using (WindowsActivitySimulator activitySimulator = new WindowsActivitySimulator())
-                System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, rules, settingsStore, new StartupRegistration(), settings, windowPinning.SetPinned, notificationSound.PlayBreakCompleted, activitySimulator.SetEnabled));
+                System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, rules, settingsStore, new StartupRegistration(), settings, foregroundApplication, applicationCatalog, windowPinning.SetPinned, notificationSound.PlayBreakCompleted, activitySimulator.SetEnabled));
         }
     }
 }

@@ -44,6 +44,9 @@ namespace TimeTracker.Classic.Tests
                 Meeting_Time_AccruesBreakAndIsRecordedSeparately();
                 WorkDaySummary_SeparatesFocusedWorkMeetingsAndTotalWork();
                 TrayIcon_Meeting_IsPurpleAndShowsContinuousMinutes();
+                AutomaticMeeting_OnlyStartsAndDoesNotStopOnForegroundChange();
+                AutomaticMeeting_DoesNotEndManualMeeting();
+                AppSettings_AutomaticMeeting_MatchesExecutablePathIgnoringCase();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -468,6 +471,37 @@ namespace TimeTracker.Classic.Tests
             DailyWorkStats stats = new DailyWorkStats(TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(35), TimeSpan.FromMinutes(35));
             AssertEqual("35", TrayIconRenderer.GetText(state, stats), "Meeting tray minutes");
             AssertEqual(System.Drawing.Color.MediumPurple, TrayIconRenderer.GetBackgroundColor(state), "Meeting tray color");
+        }
+
+        private static void AutomaticMeeting_OnlyStartsAndDoesNotStopOnForegroundChange()
+        {
+            DateTime start = new DateTime(2026, 8, 26, 9, 0, 0);
+            TimerCoordinator coordinator = new TimerCoordinator(new FakeClock(start), TimerRules.Default(), new FakeHistoryStore());
+            coordinator.Start();
+            coordinator.UpdateAutomaticMeeting(true);
+            AssertEqual(TimerPhase.Meeting, coordinator.State.Phase, "Selected foreground app starts meeting");
+            coordinator.UpdateAutomaticMeeting(false);
+            AssertEqual(TimerPhase.Meeting, coordinator.State.Phase, "Leaving selected app keeps meeting active");
+        }
+
+        private static void AutomaticMeeting_DoesNotEndManualMeeting()
+        {
+            DateTime start = new DateTime(2026, 8, 26, 9, 0, 0);
+            TimerCoordinator coordinator = new TimerCoordinator(new FakeClock(start), TimerRules.Default(), new FakeHistoryStore());
+            coordinator.Start();
+            coordinator.ToggleMeeting();
+            coordinator.UpdateAutomaticMeeting(false);
+            AssertEqual(TimerPhase.Meeting, coordinator.State.Phase, "Manual meeting ignores foreground changes");
+        }
+
+        private static void AppSettings_AutomaticMeeting_MatchesExecutablePathIgnoringCase()
+        {
+            AppSettings settings = new AppSettings();
+            settings.AutomaticMeetingEnabled = true;
+            settings.AutomaticMeetingApplications.Add(@"C:\Apps\Teams.exe");
+            AssertEqual(true, settings.IsAutomaticMeetingApplication(@"c:\apps\TEAMS.EXE"), "Executable path match ignores case");
+            settings.AutomaticMeetingEnabled = false;
+            AssertEqual(false, settings.IsAutomaticMeetingApplication(@"C:\Apps\Teams.exe"), "Disabled automatic meeting does not match");
         }
 
         private sealed class FakeClock : IClock

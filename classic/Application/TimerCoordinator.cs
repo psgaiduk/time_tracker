@@ -59,6 +59,18 @@ namespace TimeTracker.Classic.Application
             Publish();
         }
 
+        internal void UpdateAutomaticMeeting(bool selectedApplicationIsActive)
+        {
+            TimerPhase phase = _session.GetState(_clock.Now).Phase;
+            if (selectedApplicationIsActive && phase == TimerPhase.Work)
+            {
+                DateTime now = _clock.Now;
+                _session.StartMeeting(now);
+                SwitchActivity(now, ActivityKind.Meeting);
+                Publish();
+            }
+        }
+
         internal void Rest()
         {
             DateTime now = _clock.Now;

@@ -17,17 +17,22 @@ namespace TimeTracker.Classic.Presentation
         private readonly MenuItem _statsItem;
         private readonly Timer _timer;
         private readonly Timer _singleClickTimer;
+        private readonly Timer _foregroundTimer;
         private readonly BreakOverlayForm _overlay;
         private readonly AppSettings _settings;
+        private readonly IForegroundApplication _foregroundApplication;
+        private readonly IApplicationCatalog _applicationCatalog;
         private Icon _dynamicIcon;
         private string _iconKey;
 
-        internal TrayApplicationContext(TimerCoordinator coordinator, TimerRules rules, ISettingsStore settingsStore, StartupRegistration startup, AppSettings settings, Action<IntPtr, bool> setVirtualDesktopPinning, Action playBreakCompletedSound, Action<bool> setActivitySimulationEnabled)
+        internal TrayApplicationContext(TimerCoordinator coordinator, TimerRules rules, ISettingsStore settingsStore, StartupRegistration startup, AppSettings settings, IForegroundApplication foregroundApplication, IApplicationCatalog applicationCatalog, Action<IntPtr, bool> setVirtualDesktopPinning, Action playBreakCompletedSound, Action<bool> setActivitySimulationEnabled)
         {
             _coordinator = coordinator;
             _settingsStore = settingsStore;
             _startup = startup;
             _settings = settings;
+            _foregroundApplication = foregroundApplication;
+            _applicationCatalog = applicationCatalog;
             _overlay = new BreakOverlayForm(coordinator, rules, settings, setVirtualDesktopPinning, playBreakCompletedSound, setActivitySimulationEnabled);
             _overlay.ApplyCaptureSetting(_settings.HideOverlayFromCapture);
             _overlay.ApplyVirtualDesktopSetting(_settings.ShowOverlayOnAllVirtualDesktops);
@@ -56,6 +61,9 @@ namespace TimeTracker.Classic.Presentation
             _timer = new Timer { Interval = 250 };
             _timer.Tick += delegate { _coordinator.Tick(); };
             _timer.Start();
+            _foregroundTimer = new Timer { Interval = 1000 };
+            _foregroundTimer.Tick += delegate { _coordinator.UpdateAutomaticMeeting(_settings.IsAutomaticMeetingApplication(_foregroundApplication.GetExecutablePath())); };
+            _foregroundTimer.Start();
             UpdateTrayStatus();
         }
 
@@ -109,7 +117,7 @@ namespace TimeTracker.Classic.Presentation
 
         private void ShowSettings()
         {
-            using (SettingsForm form = new SettingsForm(_settings))
+            using (SettingsForm form = new SettingsForm(_settings, _applicationCatalog))
             {
                 if (form.ShowDialog() != DialogResult.OK) return;
                 form.ApplyTo(_settings);
@@ -130,6 +138,8 @@ namespace TimeTracker.Classic.Presentation
         private void Exit()
         {
             _timer.Stop();
+            _foregroundTimer.Stop();
+            _foregroundTimer.Dispose();
             _singleClickTimer.Stop();
             _singleClickTimer.Dispose();
             _coordinator.Stop();
