@@ -17,9 +17,9 @@ namespace TimeTracker.Classic
             ISettingsStore settingsStore = new PortableSettingsStore();
             AppSettings settings = settingsStore.Load();
 #if TEST_TIMER
-            TimerRules rules = TimerRules.Test(settings.IsLongBreakAllowed, delegate { return settings.WorkSummaryEnabled; });
+            TimerRules rules = TimerRules.Test(delegate(DateTime date) { return true; }, delegate { return settings.WorkSummaryEnabled; });
 #else
-            TimerRules rules = TimerRules.Default(settings.IsLongBreakAllowed, delegate { return settings.WorkSummaryEnabled; });
+            TimerRules rules = TimerRules.Default(delegate(DateTime date) { return true; }, delegate { return settings.WorkSummaryEnabled; });
 #endif
             TimerCoordinator coordinator = new TimerCoordinator(new SystemClock(), rules, new CsvWorkHistoryStore());
             VirtualDesktopWindowPinning windowPinning = new VirtualDesktopWindowPinning();

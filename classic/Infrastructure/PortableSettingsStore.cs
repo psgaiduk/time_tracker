@@ -31,14 +31,6 @@ namespace TimeTracker.Classic.Infrastructure
                 if (pair[0] == "HideOverlayFromCapture") result.HideOverlayFromCapture = value;
                 if (pair[0] == "ShowOverlayOnAllVirtualDesktops") result.ShowOverlayOnAllVirtualDesktops = value;
                 if (pair[0] == "StartWithWindows") result.StartWithWindows = value;
-                if (pair[0] == "LongBreakEnabled") result.LongBreakEnabled = value;
-                if (pair[0] == "Monday") result.Monday = value;
-                if (pair[0] == "Tuesday") result.Tuesday = value;
-                if (pair[0] == "Wednesday") result.Wednesday = value;
-                if (pair[0] == "Thursday") result.Thursday = value;
-                if (pair[0] == "Friday") result.Friday = value;
-                if (pair[0] == "Saturday") result.Saturday = value;
-                if (pair[0] == "Sunday") result.Sunday = value;
                 if (pair[0] == "WorkSummaryEnabled") result.WorkSummaryEnabled = value;
                 if (pair[0] == "AutomaticMeetingEnabled") result.AutomaticMeetingEnabled = value;
             }
@@ -51,14 +43,6 @@ namespace TimeTracker.Classic.Infrastructure
                 "HideOverlayFromCapture=" + settings.HideOverlayFromCapture,
                 "ShowOverlayOnAllVirtualDesktops=" + settings.ShowOverlayOnAllVirtualDesktops,
                 "StartWithWindows=" + settings.StartWithWindows,
-                "LongBreakEnabled=" + settings.LongBreakEnabled,
-                "Monday=" + settings.Monday,
-                "Tuesday=" + settings.Tuesday,
-                "Wednesday=" + settings.Wednesday,
-                "Thursday=" + settings.Thursday,
-                "Friday=" + settings.Friday,
-                "Saturday=" + settings.Saturday,
-                "Sunday=" + settings.Sunday,
                 "WorkSummaryEnabled=" + settings.WorkSummaryEnabled,
                 "WorkSummaryUrl=" + (settings.WorkSummaryUrl ?? String.Empty),
                 "AutomaticMeetingEnabled=" + settings.AutomaticMeetingEnabled
