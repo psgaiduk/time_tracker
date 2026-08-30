@@ -45,6 +45,7 @@ namespace TimeTracker.Classic.Tests
                 Meeting_Time_AccruesBreakAndIsRecordedSeparately();
                 WorkDaySummary_SeparatesFocusedWorkMeetingsAndTotalWork();
                 WorkDaySummaryForm_ShowsOneCombinedRestRow();
+                WorkDayReportText_FormatsClipboardText();
                 TrayIcon_Meeting_IsPurpleAndShowsContinuousMinutes();
                 AutomaticMeeting_OnlyStartsAndDoesNotStopOnForegroundChange();
                 AutomaticMeeting_DoesNotEndManualMeeting();
@@ -74,6 +75,17 @@ namespace TimeTracker.Classic.Tests
                 AssertEqual(4, table.RowCount, "Summary has one combined rest row");
                 AssertEqual("00:20:00", table.GetControlFromPosition(1, 3).Text, "Combined rest duration");
             }
+        }
+
+        private static void WorkDayReportText_FormatsClipboardText()
+        {
+            DateTime start = new DateTime(2026, 8, 30, 9, 5, 0);
+            List<HistoryEntry> entries = new List<HistoryEntry>();
+            entries.Add(new HistoryEntry(ActivityKind.Work, start, start.AddHours(2), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            entries.Add(new HistoryEntry(ActivityKind.Meeting, start.AddHours(2), start.AddHours(3), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            WorkDaySummary summary = WorkDaySummary.Create(entries, new DateTime(2026, 8, 30, 18, 10, 0));
+            string text = WorkDayReportText.Format(summary);
+            AssertEqual("Активная работа: 02:00:00\r\nВремя на звонках: 01:00:00\r\nНачало рабочего дня: 30.08.2026 09:05\r\nКонец рабочего дня: 30.08.2026 18:10", text, "Clipboard report text");
         }
 
         private static void TestRulesUseSeconds()

@@ -27,11 +27,19 @@ namespace TimeTracker.Classic.Presentation
             };
             WorkDayTimelineControl timeline = new WorkDayTimelineControl(summary) { Left = 20, Top = 15, Width = 580 };
             TableLayoutPanel table = CreateSummaryTable(summary);
+            Button copy = new Button { Left = 380, Top = 230, Width = 110, Height = 30, Text = LocalizedText.Copy };
+            copy.Click += delegate { CopyReport(summary); };
             Button close = new Button { Left = 500, Top = 230, Width = 100, Height = 30, Text = LocalizedText.Close, DialogResult = DialogResult.OK };
 
-            Controls.AddRange(new Control[] { range, timeline, table, close });
+            Controls.AddRange(new Control[] { range, timeline, table, copy, close });
             AcceptButton = close;
             CancelButton = close;
+        }
+
+        private void CopyReport(WorkDaySummary summary)
+        {
+            try { Clipboard.SetText(WorkDayReportText.Format(summary)); }
+            catch (Exception) { MessageBox.Show(this, LocalizedText.CopyFailed, Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
         }
 
         private static TableLayoutPanel CreateSummaryTable(WorkDaySummary summary)

@@ -20,6 +20,8 @@
   <data name="ShortBreaks" xml:space="preserve"><value>Короткий</value></data>
   <data name="LongBreaks" xml:space="preserve"><value>Большой</value></data>
   <data name="Close" xml:space="preserve"><value>Закрыть</value></data>
+  <data name="Copy" xml:space="preserve"><value>Скопировать</value></data>
+  <data name="CopyFailed" xml:space="preserve"><value>Не удалось скопировать отчёт. Попробуйте ещё раз.</value></data>
   <data name="AutomaticMeetingEnabled" xml:space="preserve"><value>Автоматически включать «Созвон» для активных приложений</value></data>
   <data name="AddRunningApplication" xml:space="preserve"><value>Добавить запущенное</value></data>
   <data name="ChooseExecutable" xml:space="preserve"><value>Выбрать EXE</value></data>
