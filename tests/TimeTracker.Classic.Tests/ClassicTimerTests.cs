@@ -15,6 +15,10 @@ namespace TimeTracker.Classic.Tests
             {
                 TestRulesUseSeconds();
                 AppSettings_Defaults_ShowOverlayOnAllVirtualDesktops();
+                UserInactivity_WorkWithoutInput_StartsBreakAtFiveMinutes();
+                UserInactivity_TestConfiguration_StartsBreakAtFiveSeconds();
+                UserInactivity_RecentInput_PreventsBreak();
+                UserInactivity_OutsideWork_ResetsCountdown();
                 BreakProgressWidth_DecreasesWithRemainingTime();
                 BreakCompletionSoundTrigger_PlaysOnceAndResetsForNextBreak();
                 WorkCompletesByDeadline();
@@ -100,6 +104,56 @@ namespace TimeTracker.Classic.Tests
         {
             AppSettings settings = new AppSettings();
             AssertEqual(true, settings.ShowOverlayOnAllVirtualDesktops, "Overlay is shown on all virtual desktops by default");
+        }
+
+        private static void UserInactivity_WorkWithoutInput_StartsBreakAtFiveMinutes()
+        {
+            DateTime start = new DateTime(2026, 8, 30, 9, 0, 0);
+            FakeClock clock = new FakeClock(start);
+            UserInactivityBreakTrigger trigger = new UserInactivityBreakTrigger(clock, TimeSpan.FromMinutes(5));
+            AssertEqual(false, trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.Zero), "Initial input observation");
+            clock.Now = start.AddMinutes(4).AddSeconds(59);
+            AssertEqual(false, trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.FromMinutes(4).Add(TimeSpan.FromSeconds(59))), "No break before five idle minutes");
+            clock.Now = start.AddMinutes(5);
+            AssertEqual(true, trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.FromMinutes(5)), "Break at five idle minutes");
+        }
+
+        private static void UserInactivity_TestConfiguration_StartsBreakAtFiveSeconds()
+        {
+            DateTime start = new DateTime(2026, 8, 30, 9, 0, 0);
+            FakeClock clock = new FakeClock(start);
+            UserInactivityBreakTrigger trigger = UserInactivityBreakTrigger.CreateTest(clock);
+            trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.Zero);
+            clock.Now = start.AddSeconds(4);
+            AssertEqual(false, trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.FromSeconds(4)), "No test break before five idle seconds");
+            clock.Now = start.AddSeconds(5);
+            AssertEqual(true, trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.FromSeconds(5)), "Test break at five idle seconds");
+        }
+
+        private static void UserInactivity_RecentInput_PreventsBreak()
+        {
+            DateTime start = new DateTime(2026, 8, 30, 9, 0, 0);
+            FakeClock clock = new FakeClock(start);
+            UserInactivityBreakTrigger trigger = new UserInactivityBreakTrigger(clock, TimeSpan.FromMinutes(5));
+            trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.Zero);
+            clock.Now = start.AddMinutes(4);
+            AssertEqual(false, trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.Zero), "Keyboard or mouse input resets system idle time");
+            clock.Now = start.AddMinutes(8);
+            AssertEqual(false, trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.FromMinutes(4)), "No break four minutes after input");
+            clock.Now = start.AddMinutes(9);
+            AssertEqual(true, trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.FromMinutes(5)), "Break five minutes after input");
+        }
+
+        private static void UserInactivity_OutsideWork_ResetsCountdown()
+        {
+            DateTime start = new DateTime(2026, 8, 30, 9, 0, 0);
+            FakeClock clock = new FakeClock(start);
+            UserInactivityBreakTrigger trigger = new UserInactivityBreakTrigger(clock, TimeSpan.FromMinutes(5));
+            trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.Zero);
+            clock.Now = start.AddMinutes(4);
+            trigger.ShouldStartBreak(TimerPhase.Meeting, TimeSpan.FromMinutes(4));
+            clock.Now = start.AddMinutes(8);
+            AssertEqual(false, trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.FromMinutes(8)), "Returning to work starts a new idle countdown");
         }
 
         private static void BreakProgressWidth_DecreasesWithRemainingTime()

@@ -22,10 +22,12 @@ namespace TimeTracker.Classic.Presentation
         private readonly AppSettings _settings;
         private readonly IForegroundApplication _foregroundApplication;
         private readonly IApplicationCatalog _applicationCatalog;
+        private readonly UserInactivityBreakTrigger _userInactivityTrigger;
+        private readonly IUserInactivity _userInactivity;
         private Icon _dynamicIcon;
         private string _iconKey;
 
-        internal TrayApplicationContext(TimerCoordinator coordinator, TimerRules rules, ISettingsStore settingsStore, StartupRegistration startup, AppSettings settings, IForegroundApplication foregroundApplication, IApplicationCatalog applicationCatalog, Action<IntPtr, bool> setVirtualDesktopPinning, Action playBreakCompletedSound, Action<bool> setActivitySimulationEnabled)
+        internal TrayApplicationContext(TimerCoordinator coordinator, TimerRules rules, ISettingsStore settingsStore, StartupRegistration startup, AppSettings settings, IForegroundApplication foregroundApplication, IApplicationCatalog applicationCatalog, UserInactivityBreakTrigger userInactivityTrigger, IUserInactivity userInactivity, Action<IntPtr, bool> setVirtualDesktopPinning, Action playBreakCompletedSound, Action<bool> setActivitySimulationEnabled)
         {
             _coordinator = coordinator;
             _settingsStore = settingsStore;
@@ -33,6 +35,8 @@ namespace TimeTracker.Classic.Presentation
             _settings = settings;
             _foregroundApplication = foregroundApplication;
             _applicationCatalog = applicationCatalog;
+            _userInactivityTrigger = userInactivityTrigger;
+            _userInactivity = userInactivity;
             _overlay = new BreakOverlayForm(coordinator, rules, settings, setVirtualDesktopPinning, playBreakCompletedSound, setActivitySimulationEnabled);
             _overlay.ApplyCaptureSetting(_settings.HideOverlayFromCapture);
             _overlay.ApplyVirtualDesktopSetting(_settings.ShowOverlayOnAllVirtualDesktops);
@@ -62,7 +66,11 @@ namespace TimeTracker.Classic.Presentation
             _timer.Tick += delegate { _coordinator.Tick(); };
             _timer.Start();
             _foregroundTimer = new Timer { Interval = 1000 };
-            _foregroundTimer.Tick += delegate { _coordinator.UpdateAutomaticMeeting(_settings.IsAutomaticMeetingApplication(_foregroundApplication.GetExecutablePath())); };
+            _foregroundTimer.Tick += delegate
+            {
+                _coordinator.UpdateAutomaticMeeting(_settings.IsAutomaticMeetingApplication(_foregroundApplication.GetExecutablePath()));
+                UpdateUserInactivity();
+            };
             _foregroundTimer.Start();
             UpdateTrayStatus();
         }
@@ -71,6 +79,16 @@ namespace TimeTracker.Classic.Presentation
         {
             try { _coordinator.Start(); }
             catch (InvalidOperationException) { }
+        }
+
+        private void UpdateUserInactivity()
+        {
+            try
+            {
+                if (_userInactivityTrigger.ShouldStartBreak(_coordinator.State.Phase, _userInactivity.GetInactiveDuration()))
+                    _coordinator.StartShortBreak();
+            }
+            catch (Exception) { }
         }
 
         private void HandleTrayDoubleClick()
