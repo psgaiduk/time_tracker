@@ -10,7 +10,7 @@ namespace TimeTracker.Classic.Presentation
         internal WorkDaySummaryForm(WorkDaySummary summary)
         {
             Text = LocalizedText.WorkDaySummaryTitle;
-            ClientSize = new Size(620, 325);
+            ClientSize = new Size(620, 275);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -27,7 +27,7 @@ namespace TimeTracker.Classic.Presentation
             };
             WorkDayTimelineControl timeline = new WorkDayTimelineControl(summary) { Left = 20, Top = 15, Width = 580 };
             TableLayoutPanel table = CreateSummaryTable(summary);
-            Button close = new Button { Left = 500, Top = 280, Width = 100, Height = 30, Text = LocalizedText.Close, DialogResult = DialogResult.OK };
+            Button close = new Button { Left = 500, Top = 230, Width = 100, Height = 30, Text = LocalizedText.Close, DialogResult = DialogResult.OK };
 
             Controls.AddRange(new Control[] { range, timeline, table, close });
             AcceptButton = close;
@@ -36,16 +36,14 @@ namespace TimeTracker.Classic.Presentation
 
         private static TableLayoutPanel CreateSummaryTable(WorkDaySummary summary)
         {
-            TableLayoutPanel table = new TableLayoutPanel { Left = 20, Top = 108, Width = 580, Height = 156, ColumnCount = 2, RowCount = 6 };
+            TableLayoutPanel table = new TableLayoutPanel { Left = 20, Top = 108, Width = 580, Height = 104, ColumnCount = 2, RowCount = 4 };
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70));
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
-            for (int row = 0; row < 6; row++) table.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
+            for (int row = 0; row < 4; row++) table.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
             AddRow(table, 0, LocalizedText.TotalWork, summary.TotalWorkDuration, true, false);
             AddRow(table, 1, LocalizedText.Work, summary.WorkDuration, false, true);
             AddRow(table, 2, LocalizedText.Meetings, summary.MeetingDuration, false, true);
             AddRow(table, 3, LocalizedText.TotalRest, summary.BreakDuration, true, false);
-            AddRow(table, 4, LocalizedText.ShortBreaks, summary.ShortBreakDuration, false, true);
-            AddRow(table, 5, LocalizedText.LongBreaks, summary.LongBreakDuration, false, true);
             return table;
         }
 

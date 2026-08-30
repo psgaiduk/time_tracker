@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using TimeTracker.Classic.Domain;
 using TimeTracker.Classic.Presentation;
 using TimeTracker.Classic.Application;
@@ -43,6 +44,7 @@ namespace TimeTracker.Classic.Tests
                 Meeting_ReturnBeforeDeadline_ContinuesRegularWork();
                 Meeting_Time_AccruesBreakAndIsRecordedSeparately();
                 WorkDaySummary_SeparatesFocusedWorkMeetingsAndTotalWork();
+                WorkDaySummaryForm_ShowsOneCombinedRestRow();
                 TrayIcon_Meeting_IsPurpleAndShowsContinuousMinutes();
                 AutomaticMeeting_OnlyStartsAndDoesNotStopOnForegroundChange();
                 AutomaticMeeting_DoesNotEndManualMeeting();
@@ -54,6 +56,23 @@ namespace TimeTracker.Classic.Tests
             {
                 Console.Error.WriteLine(error.Message);
                 return 1;
+            }
+        }
+
+        private static void WorkDaySummaryForm_ShowsOneCombinedRestRow()
+        {
+            DateTime start = new DateTime(2026, 8, 30, 9, 0, 0);
+            List<HistoryEntry> entries = new List<HistoryEntry>();
+            entries.Add(new HistoryEntry(ActivityKind.ShortBreak, start, start.AddMinutes(5), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            entries.Add(new HistoryEntry(ActivityKind.LongBreak, start.AddMinutes(5), start.AddMinutes(20), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            WorkDaySummary summary = WorkDaySummary.Create(entries, start.AddMinutes(20));
+            using (WorkDaySummaryForm form = new WorkDaySummaryForm(summary))
+            {
+                TableLayoutPanel table = null;
+                foreach (Control control in form.Controls)
+                    if (control is TableLayoutPanel) table = (TableLayoutPanel)control;
+                AssertEqual(4, table.RowCount, "Summary has one combined rest row");
+                AssertEqual("00:20:00", table.GetControlFromPosition(1, 3).Text, "Combined rest duration");
             }
         }
 
