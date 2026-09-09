@@ -10,6 +10,7 @@
   <data name="WorkDayWorkFormat" xml:space="preserve"><value>Work: {0}</value></data>
   <data name="WorkDayRestFormat" xml:space="preserve"><value>Rest: {0}</value></data>
   <data name="NoWorkDayActivity" xml:space="preserve"><value>No recorded activity today</value></data>
+  <data name="NoWorkDayActivityForDateFormat" xml:space="preserve"><value>No recorded activity on {0:dd.MM.yyyy}</value></data>
   <data name="WorkDayTotalWorkFormat" xml:space="preserve"><value>Total work: {0}</value></data>
   <data name="WorkDayMeetingFormat" xml:space="preserve"><value>Meetings: {0}</value></data>
   <data name="Meeting" xml:space="preserve"><value>Meeting</value></data>
@@ -22,6 +23,8 @@
   <data name="Close" xml:space="preserve"><value>Close</value></data>
   <data name="Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="CopyFailed" xml:space="preserve"><value>Could not copy the report. Please try again.</value></data>
+  <data name="PreviousDay" xml:space="preserve"><value>Previous day</value></data>
+  <data name="NextDay" xml:space="preserve"><value>Next day</value></data>
   <data name="AutomaticMeetingEnabled" xml:space="preserve"><value>Automatically enable Meeting for active applications</value></data>
   <data name="AddRunningApplication" xml:space="preserve"><value>Add running</value></data>
   <data name="ChooseExecutable" xml:space="preserve"><value>Choose EXE</value></data>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TimeTracker.Classic.Domain;
 
 namespace TimeTracker.Classic.Application
@@ -145,6 +146,14 @@ namespace TimeTracker.Classic.Application
             DateTime now = _clock.Now;
             Stop();
             return WorkDaySummary.Create(_history.GetEntries(now.Date), now);
+        }
+
+        internal WorkDaySummary GetWorkDaySummary(DateTime day)
+        {
+            DateTime now = _clock.Now;
+            IList<HistoryEntry> entries = _history.GetEntries(day.Date);
+            if (day.Date == now.Date) return WorkDaySummary.Create(entries, now);
+            return WorkDaySummary.CreateCompletedDay(entries, day.Date);
         }
 
         private void Publish()

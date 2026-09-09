@@ -7,44 +7,113 @@ namespace TimeTracker.Classic.Presentation
 {
     internal sealed class WorkDaySummaryForm : Form
     {
-        internal WorkDaySummaryForm(WorkDaySummary summary)
+        private readonly Func<DateTime, WorkDaySummary> _loadSummary;
+        private readonly DateTime _latestDate;
+        private readonly Label _selectedDateLabel;
+        private readonly Label _range;
+        private readonly Button _previousDay;
+        private readonly Button _nextDay;
+        private readonly Button _copy;
+        private DateTime _selectedDate;
+        private WorkDaySummary _summary;
+        private WorkDayTimelineControl _timeline;
+        private TableLayoutPanel _table;
+
+        internal WorkDaySummaryForm(WorkDaySummary summary) : this(summary, null) { }
+
+        internal WorkDaySummaryForm(WorkDaySummary summary, Func<DateTime, WorkDaySummary> loadSummary)
         {
+            _summary = summary;
+            _selectedDate = summary.FinishedAt.Date;
+            _latestDate = _selectedDate;
+            _loadSummary = loadSummary;
             Text = LocalizedText.WorkDaySummaryTitle;
-            ClientSize = new Size(620, 275);
+            ClientSize = new Size(620, 310);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
             StartPosition = FormStartPosition.CenterScreen;
 
-            Label range = new Label
+            _selectedDateLabel = new Label
+            {
+                Name = "SelectedDate",
+                Left = 260,
+                Top = 14,
+                Width = 100,
+                Height = 28,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            _range = new Label
             {
                 Left = 20,
-                Top = 74,
+                Top = 109,
                 Width = 580,
                 Height = 25,
-                Text = summary.HasEntries ? String.Format(LocalizedText.WorkDayRangeFormat, summary.StartedAt, summary.FinishedAt) : LocalizedText.NoWorkDayActivity,
                 Font = new Font("Segoe UI", 12, FontStyle.Bold)
             };
-            WorkDayTimelineControl timeline = new WorkDayTimelineControl(summary) { Left = 20, Top = 15, Width = 580 };
-            TableLayoutPanel table = CreateSummaryTable(summary);
-            Button copy = new Button { Left = 380, Top = 230, Width = 110, Height = 30, Text = LocalizedText.Copy };
-            copy.Click += delegate { CopyReport(summary); };
-            Button close = new Button { Left = 500, Top = 230, Width = 100, Height = 30, Text = LocalizedText.Close, DialogResult = DialogResult.OK };
+            _previousDay = new Button { Name = "PreviousDay", Left = 220, Top = 14, Width = 28, Height = 28, Text = "←", AccessibleName = LocalizedText.PreviousDay, Enabled = loadSummary != null };
+            _nextDay = new Button { Name = "NextDay", Left = 372, Top = 14, Width = 28, Height = 28, Text = "→", AccessibleName = LocalizedText.NextDay, Enabled = false };
+            _previousDay.Click += delegate { ShowPreviousDay(); };
+            _nextDay.Click += delegate { ShowNextDay(); };
+            _copy = new Button { Left = 380, Top = 265, Width = 110, Height = 30, Text = LocalizedText.Copy };
+            _copy.Click += delegate { CopyReport(); };
+            Button close = new Button { Left = 500, Top = 265, Width = 100, Height = 30, Text = LocalizedText.Close, DialogResult = DialogResult.OK };
 
-            Controls.AddRange(new Control[] { range, timeline, table, copy, close });
+            Controls.AddRange(new Control[] { _selectedDateLabel, _range, _previousDay, _nextDay, _copy, close });
+            ShowSummary(summary);
             AcceptButton = close;
             CancelButton = close;
         }
 
-        private void CopyReport(WorkDaySummary summary)
+        private void ShowDay(DateTime day)
         {
-            try { Clipboard.SetText(WorkDayReportText.Format(summary)); }
+            if (_loadSummary == null || day.Date > _latestDate) return;
+            _selectedDate = day.Date;
+            ShowSummary(_loadSummary(_selectedDate));
+        }
+
+        internal void ShowPreviousDay()
+        {
+            ShowDay(_selectedDate.AddDays(-1));
+        }
+
+        internal void ShowNextDay()
+        {
+            ShowDay(_selectedDate.AddDays(1));
+        }
+
+        private void ShowSummary(WorkDaySummary summary)
+        {
+            _summary = summary;
+            if (_timeline != null) { Controls.Remove(_timeline); _timeline.Dispose(); }
+            if (_table != null) { Controls.Remove(_table); _table.Dispose(); }
+            _selectedDateLabel.Text = _selectedDate.ToString("dd.MM.yyyy");
+            _range.Text = summary.HasEntries ? String.Format(LocalizedText.WorkDayRangeFormat, summary.StartedAt, summary.FinishedAt) : String.Format(LocalizedText.NoWorkDayActivityForDateFormat, _selectedDate);
+            _timeline = new WorkDayTimelineControl(summary) { Left = 20, Top = 50, Width = 580 };
+            _table = CreateSummaryTable(summary);
+            Controls.Add(_timeline);
+            Controls.Add(_table);
+            _timeline.SendToBack();
+            _copy.Enabled = summary.HasEntries;
+            _previousDay.Enabled = _loadSummary != null;
+            _nextDay.Enabled = _loadSummary != null && _selectedDate < _latestDate;
+        }
+
+        private void CopyReport()
+        {
+            try { Clipboard.SetText(GetReportText()); }
             catch (Exception) { MessageBox.Show(this, LocalizedText.CopyFailed, Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+        }
+
+        internal string GetReportText()
+        {
+            return WorkDayReportText.Format(_summary);
         }
 
         private static TableLayoutPanel CreateSummaryTable(WorkDaySummary summary)
         {
-            TableLayoutPanel table = new TableLayoutPanel { Left = 20, Top = 108, Width = 580, Height = 104, ColumnCount = 2, RowCount = 4 };
+            TableLayoutPanel table = new TableLayoutPanel { Left = 20, Top = 143, Width = 580, Height = 104, ColumnCount = 2, RowCount = 4 };
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70));
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
             for (int row = 0; row < 4; row++) table.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));

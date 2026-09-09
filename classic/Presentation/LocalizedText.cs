@@ -24,6 +24,7 @@ namespace TimeTracker.Classic.Presentation
         internal static string Meeting { get { return Get("Meeting"); } }
         internal static string WorkDayRestFormat { get { return Get("WorkDayRestFormat"); } }
         internal static string NoWorkDayActivity { get { return Get("NoWorkDayActivity"); } }
+        internal static string NoWorkDayActivityForDateFormat { get { return Get("NoWorkDayActivityForDateFormat"); } }
         internal static string TotalWork { get { return Get("TotalWork"); } }
         internal static string Work { get { return Get("Work"); } }
         internal static string Meetings { get { return Get("Meetings"); } }
@@ -33,6 +34,8 @@ namespace TimeTracker.Classic.Presentation
         internal static string Close { get { return Get("Close"); } }
         internal static string Copy { get { return Get("Copy"); } }
         internal static string CopyFailed { get { return Get("CopyFailed"); } }
+        internal static string PreviousDay { get { return Get("PreviousDay"); } }
+        internal static string NextDay { get { return Get("NextDay"); } }
         internal static string AutomaticMeetingEnabled { get { return Get("AutomaticMeetingEnabled"); } }
         internal static string AddRunningApplication { get { return Get("AddRunningApplication"); } }
         internal static string ChooseExecutable { get { return Get("ChooseExecutable"); } }

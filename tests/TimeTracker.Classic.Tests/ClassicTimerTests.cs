@@ -42,7 +42,10 @@ namespace TimeTracker.Classic.Tests
                 Coordinator_RestoresBalancesFromHistory();
                 Stop_DuringWork_RecordsHistoryAndEarnedBalances();
                 WorkDaySummary_CalculatesSpanWorkAndBreakTotals();
+                WorkDaySummary_CompletedDay_UsesLastEntryAsFinish();
                 FinishWorkDay_StopsCurrentPeriodAndReturnsSummary();
+                WorkDaySummaryForm_PreviousDay_LoadsHistory();
+                WorkDaySummaryForm_Navigation_IsCompactAndBesideDate();
                 Coordinator_OfflineTimeReducesBothBalancesIndependently();
                 Meeting_SuppressesDeadlineUntilReturningToWork();
                 Meeting_ReturnBeforeDeadline_ContinuesRegularWork();
@@ -79,6 +82,61 @@ namespace TimeTracker.Classic.Tests
                 AssertEqual(4, table.RowCount, "Summary has one combined rest row");
                 AssertEqual("00:20:00", table.GetControlFromPosition(1, 3).Text, "Combined rest duration");
             }
+        }
+
+        private static void WorkDaySummaryForm_PreviousDay_LoadsHistory()
+        {
+            DateTime today = new DateTime(2026, 9, 8, 18, 0, 0);
+            WorkDaySummary current = WorkDaySummary.Create(new List<HistoryEntry>(), today);
+            DateTime requestedDay = DateTime.MinValue;
+            WorkDaySummary previous = WorkDaySummary.CreateCompletedDay(new List<HistoryEntry>
+            {
+                new HistoryEntry(ActivityKind.Work, today.Date.AddDays(-1).AddHours(9), today.Date.AddDays(-1).AddHours(11), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero)
+            }, today.Date.AddDays(-1));
+            using (WorkDaySummaryForm form = new WorkDaySummaryForm(current, delegate(DateTime day)
+            {
+                requestedDay = day;
+                return day == today.Date ? current : previous;
+            }))
+            {
+                form.ShowPreviousDay();
+                AssertEqual(today.Date.AddDays(-1), requestedDay, "Previous day requested from history");
+                TableLayoutPanel table = null;
+                foreach (Control control in form.Controls)
+                    if (control is TableLayoutPanel) table = (TableLayoutPanel)control;
+                AssertEqual("02:00:00", table.GetControlFromPosition(1, 0).Text, "Previous day summary displayed");
+                AssertEqual(true, form.GetReportText().Contains("07.09.2026 09:00"), "Clipboard report uses selected historical day");
+                form.ShowNextDay();
+                AssertEqual(today.Date, requestedDay, "Next day moves forward to today");
+            }
+        }
+
+        private static void WorkDaySummaryForm_Navigation_IsCompactAndBesideDate()
+        {
+            DateTime today = new DateTime(2026, 9, 9, 18, 0, 0);
+            WorkDaySummary summary = WorkDaySummary.Create(new List<HistoryEntry>(), today);
+            using (WorkDaySummaryForm form = new WorkDaySummaryForm(summary, delegate(DateTime day) { return summary; }))
+            {
+                Label date = form.Controls["SelectedDate"] as Label;
+                AssertEqual(true, date != null, "Selected date is shown");
+                Button previous = (Button)form.Controls["PreviousDay"];
+                Button next = (Button)form.Controls["NextDay"];
+                AssertEqual("09.09.2026", date.Text, "Selected date text");
+                AssertEqual(true, previous.Left < date.Left, "Previous button is left of date");
+                AssertEqual(true, next.Left > date.Left, "Next button is right of date");
+                AssertEqual(true, previous.Width <= 32 && next.Width <= 32, "Navigation buttons are compact");
+                AssertEqual(true, previous.Top < 74 && next.Top < 74, "Navigation buttons are at the top");
+            }
+        }
+
+        private static void WorkDaySummary_CompletedDay_UsesLastEntryAsFinish()
+        {
+            DateTime day = new DateTime(2026, 9, 7);
+            List<HistoryEntry> entries = new List<HistoryEntry>();
+            entries.Add(new HistoryEntry(ActivityKind.Work, day.AddHours(9), day.AddHours(11), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            entries.Add(new HistoryEntry(ActivityKind.ShortBreak, day.AddHours(11), day.AddHours(11).AddMinutes(15), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero));
+            WorkDaySummary summary = WorkDaySummary.CreateCompletedDay(entries, day);
+            AssertEqual(day.AddHours(11).AddMinutes(15), summary.FinishedAt, "Completed day finish");
         }
 
         private static void WorkDayReportText_FormatsClipboardText()

@@ -149,7 +149,7 @@ namespace TimeTracker.Classic.Presentation
         private void FinishWorkDay()
         {
             WorkDaySummary summary = _coordinator.FinishWorkDay();
-            using (WorkDaySummaryForm form = new WorkDaySummaryForm(summary))
+            using (WorkDaySummaryForm form = new WorkDaySummaryForm(summary, delegate(DateTime day) { return _coordinator.GetWorkDaySummary(day); }))
                 form.ShowDialog();
         }
 

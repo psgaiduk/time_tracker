@@ -47,5 +47,13 @@ namespace TimeTracker.Classic.Application
             }
             return new WorkDaySummary(startedAt, finishedAt, work, meetings, shortBreaks, longBreaks, entries.AsReadOnly());
         }
+
+        internal static WorkDaySummary CreateCompletedDay(IList<HistoryEntry> source, DateTime day)
+        {
+            DateTime finishedAt = day.Date;
+            foreach (HistoryEntry entry in source)
+                if (entry.FinishedAt > finishedAt) finishedAt = entry.FinishedAt;
+            return Create(source, finishedAt);
+        }
     }
 }

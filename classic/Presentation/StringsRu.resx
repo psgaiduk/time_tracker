@@ -10,6 +10,7 @@
   <data name="WorkDayWorkFormat" xml:space="preserve"><value>Работа: {0}</value></data>
   <data name="WorkDayRestFormat" xml:space="preserve"><value>Отдых: {0}</value></data>
   <data name="NoWorkDayActivity" xml:space="preserve"><value>Сегодня ещё нет записанной активности</value></data>
+  <data name="NoWorkDayActivityForDateFormat" xml:space="preserve"><value>За {0:dd.MM.yyyy} нет записанной активности</value></data>
   <data name="WorkDayTotalWorkFormat" xml:space="preserve"><value>Всего работа: {0}</value></data>
   <data name="WorkDayMeetingFormat" xml:space="preserve"><value>Созвоны: {0}</value></data>
   <data name="Meeting" xml:space="preserve"><value>Созвон</value></data>
@@ -22,6 +23,8 @@
   <data name="Close" xml:space="preserve"><value>Закрыть</value></data>
   <data name="Copy" xml:space="preserve"><value>Скопировать</value></data>
   <data name="CopyFailed" xml:space="preserve"><value>Не удалось скопировать отчёт. Попробуйте ещё раз.</value></data>
+  <data name="PreviousDay" xml:space="preserve"><value>Предыдущий день</value></data>
+  <data name="NextDay" xml:space="preserve"><value>Следующий день</value></data>
   <data name="AutomaticMeetingEnabled" xml:space="preserve"><value>Автоматически включать «Созвон» для активных приложений</value></data>
   <data name="AddRunningApplication" xml:space="preserve"><value>Добавить запущенное</value></data>
   <data name="ChooseExecutable" xml:space="preserve"><value>Выбрать EXE</value></data>
