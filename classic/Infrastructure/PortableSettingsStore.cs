@@ -25,6 +25,9 @@ namespace TimeTracker.Classic.Infrastructure
                 string[] pair = line.Split(new[] { '=' }, 2);
                 if (pair.Length != 2) continue;
                 if (pair[0] == "WorkSummaryUrl") { result.WorkSummaryUrl = pair[1]; continue; }
+                TimeSpan time;
+                if (pair[0] == "WorkDayStart" && TimeSpan.TryParse(pair[1], out time)) { result.WorkDayStart = time; continue; }
+                if (pair[0] == "WorkDayEnd" && TimeSpan.TryParse(pair[1], out time)) { result.WorkDayEnd = time; continue; }
                 if (pair[0] == "AutomaticMeetingApplication") { if (!String.IsNullOrWhiteSpace(pair[1])) result.AutomaticMeetingApplications.Add(pair[1]); continue; }
                 bool value;
                 if (!Boolean.TryParse(pair[1], out value)) continue;
@@ -43,6 +46,8 @@ namespace TimeTracker.Classic.Infrastructure
                 "HideOverlayFromCapture=" + settings.HideOverlayFromCapture,
                 "ShowOverlayOnAllVirtualDesktops=" + settings.ShowOverlayOnAllVirtualDesktops,
                 "StartWithWindows=" + settings.StartWithWindows,
+                "WorkDayStart=" + settings.WorkDayStart,
+                "WorkDayEnd=" + settings.WorkDayEnd,
                 "WorkSummaryEnabled=" + settings.WorkSummaryEnabled,
                 "WorkSummaryUrl=" + (settings.WorkSummaryUrl ?? String.Empty),
                 "AutomaticMeetingEnabled=" + settings.AutomaticMeetingEnabled

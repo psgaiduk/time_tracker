@@ -15,6 +15,9 @@ namespace TimeTracker.Classic.Tests
             {
                 TestRulesUseSeconds();
                 AppSettings_Defaults_ShowOverlayOnAllVirtualDesktops();
+                AppSettings_Defaults_WorkDayHours();
+                UserInactivityShutdown_OutsideWorkDay_ShutsDownAfterThreshold();
+                UserActivityStart_InsideWorkDay_StartsAfterInput();
                 UserInactivity_WorkWithoutInput_StartsBreakAtFiveMinutes();
                 UserInactivity_TestConfiguration_StartsBreakAtFiveSeconds();
                 UserInactivity_RecentInput_PreventsBreak();
@@ -162,6 +165,30 @@ namespace TimeTracker.Classic.Tests
         {
             AppSettings settings = new AppSettings();
             AssertEqual(true, settings.ShowOverlayOnAllVirtualDesktops, "Overlay is shown on all virtual desktops by default");
+        }
+
+        private static void AppSettings_Defaults_WorkDayHours()
+        {
+            AppSettings settings = new AppSettings();
+            AssertEqual(TimeSpan.FromHours(9), settings.WorkDayStart, "Default work day start");
+            AssertEqual(TimeSpan.FromHours(18), settings.WorkDayEnd, "Default work day end");
+        }
+
+        private static void UserInactivityShutdown_OutsideWorkDay_ShutsDownAfterThreshold()
+        {
+            UserInactivityShutdownTrigger trigger = UserInactivityShutdownTrigger.CreateTest();
+            AssertEqual(false, trigger.ShouldShutdown(new DateTime(2026, 9, 9, 10, 0, 0), TimeSpan.FromSeconds(10), TimeSpan.FromHours(9), TimeSpan.FromHours(18)), "No shutdown during work day");
+            AssertEqual(false, trigger.ShouldShutdown(new DateTime(2026, 9, 9, 20, 0, 0), TimeSpan.FromSeconds(2), TimeSpan.FromHours(9), TimeSpan.FromHours(18)), "No shutdown before inactivity threshold");
+            AssertEqual(true, trigger.ShouldShutdown(new DateTime(2026, 9, 9, 20, 0, 0), TimeSpan.FromSeconds(3), TimeSpan.FromHours(9), TimeSpan.FromHours(18)), "Shutdown after inactivity threshold");
+        }
+
+        private static void UserActivityStart_InsideWorkDay_StartsAfterInput()
+        {
+            UserActivityStartTrigger trigger = new UserActivityStartTrigger();
+            DateTime now = new DateTime(2026, 9, 9, 7, 0, 0);
+            AssertEqual(false, trigger.ShouldStart(now, TimeSpan.FromMinutes(10), TimeSpan.FromHours(9), TimeSpan.FromHours(18)), "Initial idle observation");
+            now = new DateTime(2026, 9, 9, 9, 0, 1);
+            AssertEqual(true, trigger.ShouldStart(now, TimeSpan.Zero, TimeSpan.FromHours(9), TimeSpan.FromHours(18)), "Activity starts work inside schedule");
         }
 
         private static void UserInactivity_WorkWithoutInput_StartsBreakAtFiveMinutes()

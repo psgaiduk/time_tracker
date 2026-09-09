@@ -10,6 +10,7 @@ namespace TimeTracker.Classic.Presentation
     internal sealed class TrayApplicationContext : ApplicationContext
     {
         private readonly TimerCoordinator _coordinator;
+        private readonly IClock _clock;
         private readonly ISettingsStore _settingsStore;
         private readonly StartupRegistration _startup;
         private readonly NotifyIcon _trayIcon;
@@ -24,12 +25,15 @@ namespace TimeTracker.Classic.Presentation
         private readonly IApplicationCatalog _applicationCatalog;
         private readonly UserInactivityBreakTrigger _userInactivityTrigger;
         private readonly IUserInactivity _userInactivity;
+        private readonly UserInactivityShutdownTrigger _shutdownTrigger;
+        private readonly UserActivityStartTrigger _activityStartTrigger;
         private Icon _dynamicIcon;
         private string _iconKey;
 
-        internal TrayApplicationContext(TimerCoordinator coordinator, TimerRules rules, ISettingsStore settingsStore, StartupRegistration startup, AppSettings settings, IForegroundApplication foregroundApplication, IApplicationCatalog applicationCatalog, UserInactivityBreakTrigger userInactivityTrigger, IUserInactivity userInactivity, Action<IntPtr, bool> setVirtualDesktopPinning, Action playBreakCompletedSound, Action<bool> setActivitySimulationEnabled)
+        internal TrayApplicationContext(TimerCoordinator coordinator, IClock clock, TimerRules rules, ISettingsStore settingsStore, StartupRegistration startup, AppSettings settings, IForegroundApplication foregroundApplication, IApplicationCatalog applicationCatalog, UserInactivityBreakTrigger userInactivityTrigger, IUserInactivity userInactivity, UserInactivityShutdownTrigger shutdownTrigger, UserActivityStartTrigger activityStartTrigger, Action<IntPtr, bool> setVirtualDesktopPinning, Action playBreakCompletedSound, Action<bool> setActivitySimulationEnabled)
         {
             _coordinator = coordinator;
+            _clock = clock;
             _settingsStore = settingsStore;
             _startup = startup;
             _settings = settings;
@@ -37,6 +41,8 @@ namespace TimeTracker.Classic.Presentation
             _applicationCatalog = applicationCatalog;
             _userInactivityTrigger = userInactivityTrigger;
             _userInactivity = userInactivity;
+            _shutdownTrigger = shutdownTrigger;
+            _activityStartTrigger = activityStartTrigger;
             _overlay = new BreakOverlayForm(coordinator, rules, settings, setVirtualDesktopPinning, playBreakCompletedSound, setActivitySimulationEnabled);
             _overlay.ApplyCaptureSetting(_settings.HideOverlayFromCapture);
             _overlay.ApplyVirtualDesktopSetting(_settings.ShowOverlayOnAllVirtualDesktops);
@@ -85,7 +91,20 @@ namespace TimeTracker.Classic.Presentation
         {
             try
             {
-                if (_userInactivityTrigger.ShouldStartBreak(_coordinator.State.Phase, _userInactivity.GetInactiveDuration()))
+                DateTime now = _clock.Now;
+                TimeSpan inactiveFor = _userInactivity.GetInactiveDuration();
+                TimerPhase phase = _coordinator.State.Phase;
+                if (phase != TimerPhase.Idle && _shutdownTrigger.ShouldShutdown(now, inactiveFor, _settings.WorkDayStart, _settings.WorkDayEnd))
+                {
+                    _coordinator.Stop();
+                    return;
+                }
+                if (phase == TimerPhase.Idle && _activityStartTrigger.ShouldStart(now, inactiveFor, _settings.WorkDayStart, _settings.WorkDayEnd))
+                {
+                    StartWork();
+                    return;
+                }
+                if (_userInactivityTrigger.ShouldStartBreak(phase, inactiveFor))
                     _coordinator.StartShortBreak();
             }
             catch (Exception) { }

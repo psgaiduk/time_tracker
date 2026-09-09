@@ -26,12 +26,20 @@ namespace TimeTracker.Classic
 #endif
             TimerCoordinator coordinator = new TimerCoordinator(clock, rules, new CsvWorkHistoryStore());
             IUserInactivity userInactivity = new WindowsUserInactivity();
+            UserInactivityShutdownTrigger shutdownTrigger = new UserInactivityShutdownTrigger(
+#if TEST_TIMER
+                TimeSpan.FromSeconds(3)
+#else
+                TimeSpan.FromMinutes(3)
+#endif
+            );
+            UserActivityStartTrigger activityStartTrigger = new UserActivityStartTrigger();
             VirtualDesktopWindowPinning windowPinning = new VirtualDesktopWindowPinning();
             WindowsNotificationSound notificationSound = new WindowsNotificationSound();
             WindowsForegroundApplication foregroundApplication = new WindowsForegroundApplication();
             WindowsApplicationCatalog applicationCatalog = new WindowsApplicationCatalog();
             using (WindowsActivitySimulator activitySimulator = new WindowsActivitySimulator())
-                System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, rules, settingsStore, new StartupRegistration(), settings, foregroundApplication, applicationCatalog, userInactivityTrigger, userInactivity, windowPinning.SetPinned, notificationSound.PlayBreakCompleted, activitySimulator.SetEnabled));
+                System.Windows.Forms.Application.Run(new TrayApplicationContext(coordinator, clock, rules, settingsStore, new StartupRegistration(), settings, foregroundApplication, applicationCatalog, userInactivityTrigger, userInactivity, shutdownTrigger, activityStartTrigger, windowPinning.SetPinned, notificationSound.PlayBreakCompleted, activitySimulator.SetEnabled));
         }
     }
 }

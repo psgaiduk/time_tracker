@@ -32,4 +32,6 @@
   <data name="RunningApplications" xml:space="preserve"><value>Запущенные приложения</value></data>
   <data name="Add" xml:space="preserve"><value>Добавить</value></data>
   <data name="Cancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="WorkDayStart" xml:space="preserve"><value>Начало рабочего дня:</value></data>
+  <data name="WorkDayEnd" xml:space="preserve"><value>Конец рабочего дня:</value></data>
 </root>

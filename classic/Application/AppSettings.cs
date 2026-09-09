@@ -10,6 +10,8 @@ namespace TimeTracker.Classic.Application
             HideOverlayFromCapture = true;
             ShowOverlayOnAllVirtualDesktops = true;
             StartWithWindows = false;
+            WorkDayStart = TimeSpan.FromHours(9);
+            WorkDayEnd = TimeSpan.FromHours(18);
             WorkSummaryEnabled = true;
             WorkSummaryUrl = String.Empty;
             AutomaticMeetingApplications = new List<string>();
@@ -18,6 +20,8 @@ namespace TimeTracker.Classic.Application
         internal bool HideOverlayFromCapture { get; set; }
         internal bool ShowOverlayOnAllVirtualDesktops { get; set; }
         internal bool StartWithWindows { get; set; }
+        internal TimeSpan WorkDayStart { get; set; }
+        internal TimeSpan WorkDayEnd { get; set; }
         internal bool WorkSummaryEnabled { get; set; }
         internal string WorkSummaryUrl { get; set; }
         internal bool AutomaticMeetingEnabled { get; set; }
