@@ -13,19 +13,25 @@ namespace TimeTracker.Classic.Domain
         private TimeSpan _shortBreakBalance;
         private TimeSpan _longBreakBalance;
         private int _completedWorkIntervals;
+        private DateTime? _longBreakBalancePeriod;
 
         internal TimerSession(TimerRules rules) : this(rules, TimeSpan.Zero, TimeSpan.Zero) { }
 
         internal TimerSession(TimerRules rules, TimeSpan shortBreakBalance, TimeSpan longBreakBalance)
+            : this(rules, shortBreakBalance, longBreakBalance, null) { }
+
+        internal TimerSession(TimerRules rules, TimeSpan shortBreakBalance, TimeSpan longBreakBalance, DateTime? balanceAsOf)
         {
             _rules = rules;
             _phase = TimerPhase.Idle;
             _shortBreakBalance = NonNegative(shortBreakBalance);
             _longBreakBalance = NonNegative(longBreakBalance);
+            if (balanceAsOf.HasValue) _longBreakBalancePeriod = GetBalancePeriod(balanceAsOf.Value);
         }
 
         internal TimerState GetState(DateTime now)
         {
+            EnsureLongBreakBalancePeriod(now);
             TimeSpan remaining = TimeSpan.Zero;
             TimeSpan overdue = TimeSpan.Zero;
             if (_deadline.HasValue)
@@ -149,6 +155,7 @@ namespace TimeTracker.Classic.Domain
 
         private void AccrueWork(DateTime now)
         {
+            EnsureLongBreakBalancePeriod(now);
             if (!_workAccountingStartedAt.HasValue) return;
             TimeSpan worked = now > _workAccountingStartedAt.Value ? now - _workAccountingStartedAt.Value : TimeSpan.Zero;
             _shortBreakBalance += _rules.AccrueShortBreak(worked);
@@ -194,5 +201,21 @@ namespace TimeTracker.Classic.Domain
         }
 
         private static TimeSpan NonNegative(TimeSpan value) { return value < TimeSpan.Zero ? TimeSpan.Zero : value; }
+
+        private void EnsureLongBreakBalancePeriod(DateTime now)
+        {
+            DateTime period = GetBalancePeriod(now);
+            if (!_longBreakBalancePeriod.HasValue) _longBreakBalancePeriod = period;
+            else if (_longBreakBalancePeriod.Value != period)
+            {
+                _longBreakBalance = TimeSpan.Zero;
+                _longBreakBalancePeriod = period;
+            }
+        }
+
+        private static DateTime GetBalancePeriod(DateTime value)
+        {
+            return value.TimeOfDay < TimeSpan.FromHours(4) ? value.Date.AddDays(-1) : value.Date;
+        }
     }
 }

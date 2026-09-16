@@ -24,7 +24,7 @@ namespace TimeTracker.Classic.Application
             DateTime? latestFinishedAt = history.GetLatestFinishedAt();
             if (latestFinishedAt.HasValue && clock.Now > latestFinishedAt.Value)
                 balances = balances.AfterUntrackedRest(clock.Now - latestFinishedAt.Value);
-            _session = new TimerSession(rules, balances.ShortBreak, balances.LongBreak);
+            _session = new TimerSession(rules, balances.ShortBreak, balances.LongBreak, latestFinishedAt.HasValue ? latestFinishedAt : (DateTime?)clock.Now);
             Publish();
         }
 

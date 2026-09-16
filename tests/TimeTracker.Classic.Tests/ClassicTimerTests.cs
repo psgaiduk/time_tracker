@@ -50,6 +50,7 @@ namespace TimeTracker.Classic.Tests
                 WorkDaySummaryForm_PreviousDay_LoadsHistory();
                 WorkDaySummaryForm_Navigation_IsCompactAndBesideDate();
                 Coordinator_OfflineTimeReducesBothBalancesIndependently();
+                LongBreakBalance_ResetsAtFourInTheMorning();
                 Meeting_SuppressesDeadlineUntilReturningToWork();
                 Meeting_ReturnBeforeDeadline_ContinuesRegularWork();
                 Meeting_Time_AccruesBreakAndIsRecordedSeparately();
@@ -576,6 +577,16 @@ namespace TimeTracker.Classic.Tests
                 new FakeClock(lastActivity.AddMinutes(20)), TimerRules.Default(), history);
             AssertEqual(TimeSpan.Zero, coordinator.State.ShortBreakBalance, "Offline time clears smaller short balance");
             AssertEqual(TimeSpan.FromMinutes(20), coordinator.State.LongBreakBalance, "Offline time independently reduces long balance");
+        }
+
+        private static void LongBreakBalance_ResetsAtFourInTheMorning()
+        {
+            DateTime start = new DateTime(2026, 8, 20, 3, 59, 0);
+            TimerSession session = new TimerSession(TimerRules.Default(), TimeSpan.Zero, TimeSpan.FromMinutes(12));
+            TimerState beforeReset = session.GetState(start);
+            AssertEqual(TimeSpan.FromMinutes(12), beforeReset.LongBreakBalance, "Long balance before 4 AM");
+            TimerState afterReset = session.GetState(new DateTime(2026, 8, 20, 4, 0, 0));
+            AssertEqual(TimeSpan.Zero, afterReset.LongBreakBalance, "Long balance resets at 4 AM");
         }
 
         private static void Meeting_SuppressesDeadlineUntilReturningToWork()
