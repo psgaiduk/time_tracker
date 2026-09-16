@@ -22,6 +22,7 @@ namespace TimeTracker.Classic.Tests
                 UserInactivity_TestConfiguration_StartsBreakAtFiveSeconds();
                 UserInactivity_RecentInput_PreventsBreak();
                 UserInactivity_OutsideWork_ResetsCountdown();
+                UserInactivity_Decision_StartsRestAfterOneMinute();
                 BreakProgressWidth_DecreasesWithRemainingTime();
                 BreakCompletionSoundTrigger_PlaysOnceAndResetsForNextBreak();
                 WorkCompletesByDeadline();
@@ -240,6 +241,15 @@ namespace TimeTracker.Classic.Tests
             trigger.ShouldStartBreak(TimerPhase.Meeting, TimeSpan.FromMinutes(4));
             clock.Now = start.AddMinutes(8);
             AssertEqual(false, trigger.ShouldStartBreak(TimerPhase.Work, TimeSpan.FromMinutes(8)), "Returning to work starts a new idle countdown");
+        }
+
+        private static void UserInactivity_Decision_StartsRestAfterOneMinute()
+        {
+            FakeClock clock = new FakeClock(new DateTime(2026, 9, 9, 9, 0, 0));
+            UserInactivityBreakTrigger trigger = new UserInactivityBreakTrigger(clock, TimeSpan.FromMinutes(5));
+            AssertEqual(false, trigger.ShouldStartBreak(TimerPhase.AwaitingBreakDecision, TimeSpan.FromSeconds(59)), "No automatic rest before one minute");
+            AssertEqual(true, trigger.ShouldStartBreak(TimerPhase.AwaitingBreakDecision, TimeSpan.FromMinutes(1)), "Automatic rest after one minute");
+            AssertEqual(true, trigger.ShouldStartBreak(TimerPhase.WorkSummary, TimeSpan.FromMinutes(1)), "Summary automatically continues to rest");
         }
 
         private static void BreakProgressWidth_DecreasesWithRemainingTime()

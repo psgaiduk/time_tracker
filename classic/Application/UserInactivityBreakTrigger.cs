@@ -7,12 +7,17 @@ namespace TimeTracker.Classic.Application
     {
         private readonly IClock _clock;
         private readonly TimeSpan _threshold;
+        private readonly TimeSpan _decisionThreshold;
         private DateTime? _workObservedAt;
 
         internal UserInactivityBreakTrigger(IClock clock, TimeSpan threshold)
+            : this(clock, threshold, TimeSpan.FromMinutes(1)) { }
+
+        internal UserInactivityBreakTrigger(IClock clock, TimeSpan threshold, TimeSpan decisionThreshold)
         {
             _clock = clock;
             _threshold = threshold;
+            _decisionThreshold = decisionThreshold;
         }
 
         internal static UserInactivityBreakTrigger CreateDefault(IClock clock)
@@ -28,6 +33,8 @@ namespace TimeTracker.Classic.Application
         internal bool ShouldStartBreak(TimerPhase phase, TimeSpan inactiveFor)
         {
             DateTime now = _clock.Now;
+            if (phase == TimerPhase.AwaitingBreakDecision || phase == TimerPhase.WorkSummary)
+                return inactiveFor >= _decisionThreshold;
             if (phase != TimerPhase.Work)
             {
                 _workObservedAt = null;

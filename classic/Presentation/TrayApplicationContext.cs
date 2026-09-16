@@ -105,7 +105,11 @@ namespace TimeTracker.Classic.Presentation
                     return;
                 }
                 if (_userInactivityTrigger.ShouldStartBreak(phase, inactiveFor))
-                    _coordinator.StartShortBreak();
+                {
+                    if (phase == TimerPhase.AwaitingBreakDecision) _coordinator.Rest();
+                    else if (phase == TimerPhase.WorkSummary) _coordinator.CompleteWorkSummary();
+                    else _coordinator.StartShortBreak();
+                }
             }
             catch (Exception) { }
         }
