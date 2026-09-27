@@ -24,7 +24,7 @@ namespace TimeTracker.Classic.Application
             DateTime? latestFinishedAt = history.GetLatestFinishedAt();
             if (latestFinishedAt.HasValue && clock.Now > latestFinishedAt.Value)
                 balances = balances.AfterUntrackedRest(clock.Now - latestFinishedAt.Value);
-            _session = new TimerSession(rules, balances.ShortBreak, balances.LongBreak, latestFinishedAt.HasValue ? latestFinishedAt : (DateTime?)clock.Now);
+            _session = new TimerSession(rules, balances.ShortBreak, balances.LongBreak, clock.Now);
             Publish();
         }
 
@@ -154,6 +154,11 @@ namespace TimeTracker.Classic.Application
             IList<HistoryEntry> entries = _history.GetEntries(day.Date);
             if (day.Date == now.Date) return WorkDaySummary.Create(entries, now);
             return WorkDaySummary.CreateCompletedDay(entries, day.Date);
+        }
+
+        internal IList<HistoryEntry> GetHistory(DateTime day)
+        {
+            return _history.GetEntries(day.Date);
         }
 
         private void Publish()

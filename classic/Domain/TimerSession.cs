@@ -13,7 +13,7 @@ namespace TimeTracker.Classic.Domain
         private TimeSpan _shortBreakBalance;
         private TimeSpan _longBreakBalance;
         private int _completedWorkIntervals;
-        private DateTime? _longBreakBalancePeriod;
+        private DateTime? _lastBalanceObservedAt;
 
         internal TimerSession(TimerRules rules) : this(rules, TimeSpan.Zero, TimeSpan.Zero) { }
 
@@ -26,7 +26,10 @@ namespace TimeTracker.Classic.Domain
             _phase = TimerPhase.Idle;
             _shortBreakBalance = NonNegative(shortBreakBalance);
             _longBreakBalance = NonNegative(longBreakBalance);
-            if (balanceAsOf.HasValue) _longBreakBalancePeriod = GetBalancePeriod(balanceAsOf.Value);
+            if (balanceAsOf.HasValue)
+            {
+                _lastBalanceObservedAt = balanceAsOf.Value;
+            }
         }
 
         internal TimerState GetState(DateTime now)
@@ -125,6 +128,7 @@ namespace TimeTracker.Classic.Domain
             _phase = TimerPhase.Idle;
             _deadline = null;
             _workAccountingStartedAt = null;
+            _lastBalanceObservedAt = now;
         }
 
         private void SettleBreak(DateTime now)
@@ -204,18 +208,15 @@ namespace TimeTracker.Classic.Domain
 
         private void EnsureLongBreakBalancePeriod(DateTime now)
         {
-            DateTime period = GetBalancePeriod(now);
-            if (!_longBreakBalancePeriod.HasValue) _longBreakBalancePeriod = period;
-            else if (_longBreakBalancePeriod.Value != period)
+            if (!_lastBalanceObservedAt.HasValue) _lastBalanceObservedAt = now;
+            else if (_phase == TimerPhase.Idle && now > _lastBalanceObservedAt.Value)
             {
-                _longBreakBalance = TimeSpan.Zero;
-                _longBreakBalancePeriod = period;
+                TimeSpan idle = now - _lastBalanceObservedAt.Value;
+                _shortBreakBalance = NonNegative(_shortBreakBalance - idle);
+                _longBreakBalance = NonNegative(_longBreakBalance - idle);
             }
+            _lastBalanceObservedAt = now;
         }
 
-        private static DateTime GetBalancePeriod(DateTime value)
-        {
-            return value.TimeOfDay < TimeSpan.FromHours(4) ? value.Date.AddDays(-1) : value.Date;
-        }
     }
 }

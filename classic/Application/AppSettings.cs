@@ -14,6 +14,8 @@ namespace TimeTracker.Classic.Application
             WorkDayEnd = TimeSpan.FromHours(18);
             WorkSummaryEnabled = true;
             WorkSummaryUrl = String.Empty;
+            HistoryApiUrl = String.Empty;
+            UserId = String.Empty;
             AutomaticMeetingApplications = new List<string>();
         }
 
@@ -24,6 +26,8 @@ namespace TimeTracker.Classic.Application
         internal TimeSpan WorkDayEnd { get; set; }
         internal bool WorkSummaryEnabled { get; set; }
         internal string WorkSummaryUrl { get; set; }
+        internal string HistoryApiUrl { get; set; }
+        internal string UserId { get; set; }
         internal bool AutomaticMeetingEnabled { get; set; }
         internal List<string> AutomaticMeetingApplications { get; private set; }
 

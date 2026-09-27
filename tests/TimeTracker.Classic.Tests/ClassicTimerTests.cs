@@ -51,7 +51,8 @@ namespace TimeTracker.Classic.Tests
                 WorkDaySummaryForm_PreviousDay_LoadsHistory();
                 WorkDaySummaryForm_Navigation_IsCompactAndBesideDate();
                 Coordinator_OfflineTimeReducesBothBalancesIndependently();
-                LongBreakBalance_ResetsAtFourInTheMorning();
+                LongBreakBalance_DoesNotResetAtFourInTheMorning();
+                Idle_ConsumesBreakBalancesOverTime();
                 Meeting_SuppressesDeadlineUntilReturningToWork();
                 Meeting_ReturnBeforeDeadline_ContinuesRegularWork();
                 Meeting_Time_AccruesBreakAndIsRecordedSeparately();
@@ -589,14 +590,23 @@ namespace TimeTracker.Classic.Tests
             AssertEqual(TimeSpan.FromMinutes(20), coordinator.State.LongBreakBalance, "Offline time independently reduces long balance");
         }
 
-        private static void LongBreakBalance_ResetsAtFourInTheMorning()
+        private static void LongBreakBalance_DoesNotResetAtFourInTheMorning()
         {
             DateTime start = new DateTime(2026, 8, 20, 3, 59, 0);
             TimerSession session = new TimerSession(TimerRules.Default(), TimeSpan.Zero, TimeSpan.FromMinutes(12));
             TimerState beforeReset = session.GetState(start);
             AssertEqual(TimeSpan.FromMinutes(12), beforeReset.LongBreakBalance, "Long balance before 4 AM");
             TimerState afterReset = session.GetState(new DateTime(2026, 8, 20, 4, 0, 0));
-            AssertEqual(TimeSpan.Zero, afterReset.LongBreakBalance, "Long balance resets at 4 AM");
+            AssertEqual(TimeSpan.FromMinutes(11), afterReset.LongBreakBalance, "Long balance only decreases at 4 AM");
+        }
+
+        private static void Idle_ConsumesBreakBalancesOverTime()
+        {
+            DateTime start = new DateTime(2026, 8, 20, 12, 0, 0);
+            TimerSession session = new TimerSession(TimerRules.Default(), TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(12), start);
+            TimerState state = session.GetState(start.AddMinutes(2));
+            AssertEqual(TimeSpan.FromMinutes(3), state.ShortBreakBalance, "Idle consumes short balance");
+            AssertEqual(TimeSpan.FromMinutes(10), state.LongBreakBalance, "Idle consumes long balance");
         }
 
         private static void Meeting_SuppressesDeadlineUntilReturningToWork()
