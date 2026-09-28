@@ -158,7 +158,19 @@ namespace TimeTracker.Classic.Application
 
         internal IList<HistoryEntry> GetHistory(DateTime day)
         {
-            return _history.GetEntries(day.Date);
+            DateTime now = _clock.Now;
+            IList<HistoryEntry> result = new List<HistoryEntry>(_history.GetEntries(day.Date));
+            TimerState state = _session.GetState(now);
+            DateTime? startedAt = IsBreak(state.Phase) ? _breakStartedAt : _currentPeriodStartedAt;
+            if (startedAt.HasValue && now > startedAt.Value && startedAt.Value.Date == day.Date)
+            {
+                ActivityKind kind = IsBreak(state.Phase)
+                    ? (state.Phase == TimerPhase.LongBreak ? ActivityKind.LongBreak : ActivityKind.ShortBreak)
+                    : _currentActivityKind;
+                TimeSpan planned = IsBreak(state.Phase) ? _plannedBreakDuration : TimeSpan.Zero;
+                result.Add(new HistoryEntry(kind, startedAt.Value, now, planned, state.ShortBreakBalance, state.LongBreakBalance));
+            }
+            return result;
         }
 
         private void Publish()
