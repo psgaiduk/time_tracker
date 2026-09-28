@@ -16,6 +16,7 @@ namespace TimeTracker.Classic.Application
             WorkSummaryUrl = String.Empty;
             HistoryApiUrl = String.Empty;
             UserId = String.Empty;
+            HistoryApiToken = String.Empty;
             AutomaticMeetingApplications = new List<string>();
         }
 
@@ -28,6 +29,7 @@ namespace TimeTracker.Classic.Application
         internal string WorkSummaryUrl { get; set; }
         internal string HistoryApiUrl { get; set; }
         internal string UserId { get; set; }
+        internal string HistoryApiToken { get; set; }
         internal bool AutomaticMeetingEnabled { get; set; }
         internal List<string> AutomaticMeetingApplications { get; private set; }
 

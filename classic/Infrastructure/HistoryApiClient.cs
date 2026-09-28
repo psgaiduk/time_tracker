@@ -9,23 +9,24 @@ namespace TimeTracker.Classic.Infrastructure
 {
     internal sealed class HistoryApiClient
     {
-        internal void UploadAsync(string url, string userId, DateTime day, IList<HistoryEntry> entries)
+        internal void UploadAsync(string url, string userId, string token, DateTime day, IList<HistoryEntry> entries)
         {
-            if (String.IsNullOrWhiteSpace(url) || String.IsNullOrWhiteSpace(userId)) return;
+            if (String.IsNullOrWhiteSpace(url) || String.IsNullOrWhiteSpace(userId) || String.IsNullOrWhiteSpace(token)) return;
             System.Threading.ThreadPool.QueueUserWorkItem(delegate
             {
-                try { Upload(url, userId, day, entries); }
+                try { Upload(url, userId, token, day, entries); }
                 catch (Exception error) { Log(error); }
             });
         }
 
-        private static void Upload(string url, string userId, DateTime day, IList<HistoryEntry> entries)
+        private static void Upload(string url, string userId, string token, DateTime day, IList<HistoryEntry> entries)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url.TrimEnd('/') + "/history");
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url.TrimEnd('/') + "/integration/history");
             request.Method = "POST";
             request.Timeout = 10000;
             request.ReadWriteTimeout = 10000;
             request.ContentType = "application/json; charset=utf-8";
+            request.Headers[HttpRequestHeader.Authorization] = "Bearer " + token;
             byte[] body = Encoding.UTF8.GetBytes(BuildJson(userId, day, entries));
             request.ContentLength = body.Length;
             using (Stream stream = request.GetRequestStream()) stream.Write(body, 0, body.Length);

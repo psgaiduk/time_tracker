@@ -16,6 +16,7 @@ namespace TimeTracker.Classic.Presentation
         private readonly TextBox _workSummaryUrl;
         private readonly TextBox _historyApiUrl;
         private readonly TextBox _userId;
+        private readonly TextBox _apiToken;
         private readonly IApplicationCatalog _applicationCatalog;
         private readonly CheckBox _automaticMeetingEnabled;
         private readonly ListBox _automaticMeetingApplications;
@@ -24,7 +25,7 @@ namespace TimeTracker.Classic.Presentation
         {
             _applicationCatalog = applicationCatalog;
             Text = "Настройки Time Tracker";
-            ClientSize = new Size(570, 595);
+            ClientSize = new Size(570, 625);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -44,18 +45,20 @@ namespace TimeTracker.Classic.Presentation
             _historyApiUrl = new TextBox { Left = 120, Top = 248, Width = 410, Text = settings.HistoryApiUrl ?? String.Empty };
             Label userIdLabel = new Label { Left = 40, Top = 284, Width = 80, Text = "User ID:" };
             _userId = new TextBox { Left = 120, Top = 280, Width = 200, Text = settings.UserId ?? String.Empty };
-            _automaticMeetingEnabled = new CheckBox { Left = 20, Top = 320, Width = 500, Text = LocalizedText.AutomaticMeetingEnabled, Checked = settings.AutomaticMeetingEnabled };
-            _automaticMeetingApplications = new ListBox { Left = 40, Top = 350, Width = 510, Height = 120 };
+            Label tokenLabel = new Label { Left = 40, Top = 316, Width = 80, Text = "API Token:" };
+            _apiToken = new TextBox { Left = 120, Top = 312, Width = 410, UseSystemPasswordChar = true, Text = settings.HistoryApiToken ?? String.Empty };
+            _automaticMeetingEnabled = new CheckBox { Left = 20, Top = 350, Width = 500, Text = LocalizedText.AutomaticMeetingEnabled, Checked = settings.AutomaticMeetingEnabled };
+            _automaticMeetingApplications = new ListBox { Left = 40, Top = 380, Width = 510, Height = 120 };
             foreach (string path in settings.AutomaticMeetingApplications) _automaticMeetingApplications.Items.Add(path);
-            Button addRunning = new Button { Left = 40, Top = 480, Width = 160, Text = LocalizedText.AddRunningApplication };
-            Button addExecutable = new Button { Left = 210, Top = 480, Width = 150, Text = LocalizedText.ChooseExecutable };
-            Button remove = new Button { Left = 370, Top = 480, Width = 100, Text = LocalizedText.Remove };
+            Button addRunning = new Button { Left = 40, Top = 510, Width = 160, Text = LocalizedText.AddRunningApplication };
+            Button addExecutable = new Button { Left = 210, Top = 510, Width = 150, Text = LocalizedText.ChooseExecutable };
+            Button remove = new Button { Left = 370, Top = 510, Width = 100, Text = LocalizedText.Remove };
             addRunning.Click += delegate { AddRunningApplication(); };
             addExecutable.Click += delegate { AddExecutable(); };
             remove.Click += delegate { if (_automaticMeetingApplications.SelectedIndex >= 0) _automaticMeetingApplications.Items.RemoveAt(_automaticMeetingApplications.SelectedIndex); };
-            Button save = new Button { Left = 380, Top = 545, Width = 85, Text = "Сохранить", DialogResult = DialogResult.OK };
-            Button cancel = new Button { Left = 475, Top = 545, Width = 75, Text = "Отмена", DialogResult = DialogResult.Cancel };
-            Controls.AddRange(new Control[] { _hideFromCapture, _showOnAllVirtualDesktops, _startWithWindows, startLabel, _workDayStart, endLabel, _workDayEnd, _workSummaryEnabled, urlLabel, _workSummaryUrl, apiLabel, _historyApiUrl, userIdLabel, _userId, _automaticMeetingEnabled, _automaticMeetingApplications, addRunning, addExecutable, remove, save, cancel });
+            Button save = new Button { Left = 380, Top = 575, Width = 85, Text = "Сохранить", DialogResult = DialogResult.OK };
+            Button cancel = new Button { Left = 475, Top = 575, Width = 75, Text = "Отмена", DialogResult = DialogResult.Cancel };
+            Controls.AddRange(new Control[] { _hideFromCapture, _showOnAllVirtualDesktops, _startWithWindows, startLabel, _workDayStart, endLabel, _workDayEnd, _workSummaryEnabled, urlLabel, _workSummaryUrl, apiLabel, _historyApiUrl, userIdLabel, _userId, tokenLabel, _apiToken, _automaticMeetingEnabled, _automaticMeetingApplications, addRunning, addExecutable, remove, save, cancel });
             AcceptButton = save;
             CancelButton = cancel;
         }
@@ -71,6 +74,7 @@ namespace TimeTracker.Classic.Presentation
             settings.WorkSummaryUrl = _workSummaryUrl.Text.Trim();
             settings.HistoryApiUrl = _historyApiUrl.Text.Trim();
             settings.UserId = _userId.Text.Trim();
+            settings.HistoryApiToken = _apiToken.Text.Trim();
             settings.AutomaticMeetingEnabled = _automaticMeetingEnabled.Checked;
             settings.AutomaticMeetingApplications.Clear();
             foreach (object item in _automaticMeetingApplications.Items) settings.AutomaticMeetingApplications.Add(item.ToString());

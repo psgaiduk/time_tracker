@@ -91,8 +91,8 @@ namespace TimeTracker.Classic.Presentation
         private void UploadHistory()
         {
             DateTime now = _clock.Now;
-            if (String.IsNullOrWhiteSpace(_settings.HistoryApiUrl) || String.IsNullOrWhiteSpace(_settings.UserId)) return;
-            _historyApiClient.UploadAsync(_settings.HistoryApiUrl, _settings.UserId, now.Date, _coordinator.GetHistory(now.Date));
+            if (String.IsNullOrWhiteSpace(_settings.HistoryApiUrl) || String.IsNullOrWhiteSpace(_settings.UserId) || String.IsNullOrWhiteSpace(_settings.HistoryApiToken)) return;
+            _historyApiClient.UploadAsync(_settings.HistoryApiUrl, _settings.UserId, _settings.HistoryApiToken, now.Date, _coordinator.GetHistory(now.Date));
         }
 
         private void StartWork()

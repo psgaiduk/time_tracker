@@ -27,6 +27,7 @@ namespace TimeTracker.Classic.Infrastructure
                 if (pair[0] == "WorkSummaryUrl") { result.WorkSummaryUrl = pair[1]; continue; }
                 if (pair[0] == "HistoryApiUrl") { result.HistoryApiUrl = pair[1]; continue; }
                 if (pair[0] == "UserId") { result.UserId = pair[1]; continue; }
+                if (pair[0] == "HistoryApiToken") { result.HistoryApiToken = pair[1]; continue; }
                 TimeSpan time;
                 if (pair[0] == "WorkDayStart" && TimeSpan.TryParse(pair[1], out time)) { result.WorkDayStart = time; continue; }
                 if (pair[0] == "WorkDayEnd" && TimeSpan.TryParse(pair[1], out time)) { result.WorkDayEnd = time; continue; }
@@ -54,6 +55,7 @@ namespace TimeTracker.Classic.Infrastructure
                 "WorkSummaryUrl=" + (settings.WorkSummaryUrl ?? String.Empty),
                 "HistoryApiUrl=" + (settings.HistoryApiUrl ?? String.Empty),
                 "UserId=" + (settings.UserId ?? String.Empty),
+                "HistoryApiToken=" + (settings.HistoryApiToken ?? String.Empty),
                 "AutomaticMeetingEnabled=" + settings.AutomaticMeetingEnabled
             });
             foreach (string path in settings.AutomaticMeetingApplications) lines.Add("AutomaticMeetingApplication=" + path);
