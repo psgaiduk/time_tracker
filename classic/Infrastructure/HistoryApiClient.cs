@@ -15,7 +15,7 @@ namespace TimeTracker.Classic.Infrastructure
             System.Threading.ThreadPool.QueueUserWorkItem(delegate
             {
                 try { Upload(url, userId, day, entries); }
-                catch (Exception) { }
+                catch (Exception error) { Log(error); }
             });
         }
 
@@ -23,6 +23,8 @@ namespace TimeTracker.Classic.Infrastructure
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url.TrimEnd('/') + "/history");
             request.Method = "POST";
+            request.Timeout = 10000;
+            request.ReadWriteTimeout = 10000;
             request.ContentType = "application/json; charset=utf-8";
             byte[] body = Encoding.UTF8.GetBytes(BuildJson(userId, day, entries));
             request.ContentLength = body.Length;
@@ -50,6 +52,17 @@ namespace TimeTracker.Classic.Infrastructure
         private static string Escape(string value)
         {
             return value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n");
+        }
+
+        private static void Log(Exception error)
+        {
+            try
+            {
+                string data = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data");
+                Directory.CreateDirectory(data);
+                File.AppendAllText(Path.Combine(data, "api-sync.log"), DateTime.Now.ToString("o") + " " + error + Environment.NewLine);
+            }
+            catch (Exception) { }
         }
     }
 }

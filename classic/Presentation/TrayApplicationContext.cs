@@ -19,6 +19,7 @@ namespace TimeTracker.Classic.Presentation
         private readonly Timer _timer;
         private readonly Timer _singleClickTimer;
         private readonly Timer _foregroundTimer;
+        private readonly Timer _historyTimer;
         private readonly BreakOverlayForm _overlay;
         private readonly AppSettings _settings;
         private readonly IForegroundApplication _foregroundApplication;
@@ -28,7 +29,6 @@ namespace TimeTracker.Classic.Presentation
         private readonly UserInactivityShutdownTrigger _shutdownTrigger;
         private readonly UserActivityStartTrigger _activityStartTrigger;
         private readonly HistoryApiClient _historyApiClient;
-        private DateTime _lastHistoryUpload;
         private Icon _dynamicIcon;
         private string _iconKey;
 
@@ -46,7 +46,6 @@ namespace TimeTracker.Classic.Presentation
             _shutdownTrigger = shutdownTrigger;
             _activityStartTrigger = activityStartTrigger;
             _historyApiClient = new HistoryApiClient();
-            _lastHistoryUpload = DateTime.MinValue;
             _overlay = new BreakOverlayForm(coordinator, rules, settings, setVirtualDesktopPinning, playBreakCompletedSound, setActivitySimulationEnabled);
             _overlay.ApplyCaptureSetting(_settings.HideOverlayFromCapture);
             _overlay.ApplyVirtualDesktopSetting(_settings.ShowOverlayOnAllVirtualDesktops);
@@ -80,18 +79,19 @@ namespace TimeTracker.Classic.Presentation
             {
                 _coordinator.UpdateAutomaticMeeting(_settings.IsAutomaticMeetingApplication(_foregroundApplication.GetExecutablePath()));
                 UpdateUserInactivity();
-                UploadHistoryIfDue();
             };
             _foregroundTimer.Start();
+            _historyTimer = new Timer { Interval = 300000 };
+            _historyTimer.Tick += delegate { UploadHistory(); };
+            _historyTimer.Start();
+            UploadHistory();
             UpdateTrayStatus();
         }
 
-        private void UploadHistoryIfDue()
+        private void UploadHistory()
         {
             DateTime now = _clock.Now;
             if (String.IsNullOrWhiteSpace(_settings.HistoryApiUrl) || String.IsNullOrWhiteSpace(_settings.UserId)) return;
-            if (_lastHistoryUpload != DateTime.MinValue && now - _lastHistoryUpload < TimeSpan.FromMinutes(5)) return;
-            _lastHistoryUpload = now;
             _historyApiClient.UploadAsync(_settings.HistoryApiUrl, _settings.UserId, now.Date, _coordinator.GetHistory(now.Date));
         }
 
@@ -195,6 +195,8 @@ namespace TimeTracker.Classic.Presentation
             _timer.Stop();
             _foregroundTimer.Stop();
             _foregroundTimer.Dispose();
+            _historyTimer.Stop();
+            _historyTimer.Dispose();
             _singleClickTimer.Stop();
             _singleClickTimer.Dispose();
             _coordinator.Stop();
