@@ -159,10 +159,12 @@ namespace TimeTracker.Classic.Application
         internal IList<HistoryEntry> GetHistory(DateTime day)
         {
             DateTime now = _clock.Now;
-            IList<HistoryEntry> result = new List<HistoryEntry>(_history.GetEntries(day.Date));
+            IList<HistoryEntry> result = new List<HistoryEntry>();
+            foreach (HistoryEntry entry in _history.GetEntries(day.Date))
+                if (IsSyncActivity(entry.Kind)) result.Add(entry);
             TimerState state = _session.GetState(now);
             DateTime? startedAt = IsBreak(state.Phase) ? _breakStartedAt : _currentPeriodStartedAt;
-            if (startedAt.HasValue && now > startedAt.Value && startedAt.Value.Date == day.Date)
+            if (startedAt.HasValue && now > startedAt.Value && startedAt.Value.Date == day.Date && IsSyncActivity(_currentActivityKind))
             {
                 ActivityKind kind = IsBreak(state.Phase)
                     ? (state.Phase == TimerPhase.LongBreak ? ActivityKind.LongBreak : ActivityKind.ShortBreak)
@@ -225,6 +227,11 @@ namespace TimeTracker.Classic.Application
         private static bool IsBreak(TimerPhase phase)
         {
             return phase == TimerPhase.ShortBreak || phase == TimerPhase.LongBreak;
+        }
+
+        private static bool IsSyncActivity(ActivityKind kind)
+        {
+            return kind == ActivityKind.Work || kind == ActivityKind.Meeting;
         }
     }
 }

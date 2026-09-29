@@ -19,7 +19,6 @@ namespace TimeTracker.Classic.Presentation
         private readonly Timer _timer;
         private readonly Timer _singleClickTimer;
         private readonly Timer _foregroundTimer;
-        private readonly Timer _historyTimer;
         private readonly BreakOverlayForm _overlay;
         private readonly AppSettings _settings;
         private readonly IForegroundApplication _foregroundApplication;
@@ -29,6 +28,8 @@ namespace TimeTracker.Classic.Presentation
         private readonly UserInactivityShutdownTrigger _shutdownTrigger;
         private readonly UserActivityStartTrigger _activityStartTrigger;
         private readonly HistoryApiClient _historyApiClient;
+        private DateTime _lastScheduledStartUploadDate;
+        private DateTime _lastScheduledEndUploadDate;
         private Icon _dynamicIcon;
         private string _iconKey;
 
@@ -69,7 +70,7 @@ namespace TimeTracker.Classic.Presentation
                 _singleClickTimer.Start();
             };
             _trayIcon.DoubleClick += delegate { _singleClickTimer.Stop(); HandleTrayDoubleClick(); };
-            _coordinator.StateChanged += delegate { UpdateTrayStatus(); };
+            _coordinator.StateChanged += delegate { HandleStateChanged(); };
 
             _timer = new Timer { Interval = 250 };
             _timer.Tick += delegate { _coordinator.Tick(); };
@@ -79,20 +80,50 @@ namespace TimeTracker.Classic.Presentation
             {
                 _coordinator.UpdateAutomaticMeeting(_settings.IsAutomaticMeetingApplication(_foregroundApplication.GetExecutablePath()));
                 UpdateUserInactivity();
+                UploadScheduledHistory(_clock.Now);
             };
             _foregroundTimer.Start();
-            _historyTimer = new Timer { Interval = 300000 };
-            _historyTimer.Tick += delegate { UploadHistory(); };
-            _historyTimer.Start();
-            UploadHistory();
+            _lastPhase = _coordinator.State.Phase;
             UpdateTrayStatus();
         }
 
-        private void UploadHistory()
+        private TimerPhase _lastPhase;
+
+        private void HandleStateChanged()
+        {
+            TimerPhase phase = _coordinator.State.Phase;
+            if (_lastPhase == TimerPhase.Idle && phase == TimerPhase.Work)
+                UploadHistory(_clock.Now.Date);
+            else if (IsBreak(phase) || phase == TimerPhase.Idle && _lastPhase != TimerPhase.Idle)
+                UploadHistory(_clock.Now.Date);
+            _lastPhase = phase;
+            UpdateTrayStatus();
+        }
+
+        private void UploadHistory(DateTime day)
         {
             DateTime now = _clock.Now;
             if (String.IsNullOrWhiteSpace(_settings.HistoryApiUrl) || String.IsNullOrWhiteSpace(_settings.UserId) || String.IsNullOrWhiteSpace(_settings.HistoryApiToken)) return;
-            _historyApiClient.UploadAsync(_settings.HistoryApiUrl, _settings.UserId, _settings.HistoryApiToken, now.Date, _coordinator.GetHistory(now.Date));
+            _historyApiClient.UploadAsync(_settings.HistoryApiUrl, _settings.UserId, _settings.HistoryApiToken, day, _coordinator.GetHistory(day));
+        }
+
+        private void UploadScheduledHistory(DateTime now)
+        {
+            if (now.TimeOfDay >= _settings.WorkDayStart && _lastScheduledStartUploadDate != now.Date)
+                UploadStartOfWorkDay(now);
+            if (now.TimeOfDay >= _settings.WorkDayEnd && _lastScheduledEndUploadDate != now.Date)
+            {
+                _lastScheduledEndUploadDate = now.Date;
+                UploadHistory(now.Date);
+            }
+        }
+
+        private void UploadStartOfWorkDay(DateTime now)
+        {
+            if (_lastScheduledStartUploadDate == now.Date) return;
+            _lastScheduledStartUploadDate = now.Date;
+            UploadHistory(now.Date.AddDays(-1));
+            UploadHistory(now.Date);
         }
 
         private void StartWork()
@@ -186,6 +217,7 @@ namespace TimeTracker.Classic.Presentation
         private void FinishWorkDay()
         {
             WorkDaySummary summary = _coordinator.FinishWorkDay();
+            UploadHistory(_clock.Now.Date);
             using (WorkDaySummaryForm form = new WorkDaySummaryForm(summary, delegate(DateTime day) { return _coordinator.GetWorkDaySummary(day); }))
                 form.ShowDialog();
         }
@@ -195,16 +227,20 @@ namespace TimeTracker.Classic.Presentation
             _timer.Stop();
             _foregroundTimer.Stop();
             _foregroundTimer.Dispose();
-            _historyTimer.Stop();
-            _historyTimer.Dispose();
             _singleClickTimer.Stop();
             _singleClickTimer.Dispose();
             _coordinator.Stop();
+            UploadHistory(_clock.Now.Date);
             _trayIcon.Visible = false;
             _trayIcon.Dispose();
             if (_dynamicIcon != null) _dynamicIcon.Dispose();
             _overlay.Dispose();
             ExitThread();
+        }
+
+        private static bool IsBreak(TimerPhase phase)
+        {
+            return phase == TimerPhase.ShortBreak || phase == TimerPhase.LongBreak;
         }
     }
 }
