@@ -21,7 +21,7 @@ namespace TimeTracker.Classic.Infrastructure
 
         private static void Upload(string url, string userId, string token, DateTime day, IList<HistoryEntry> entries)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url.TrimEnd('/') + "/integration/history");
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url.TrimEnd('/') + "/integrations/work_time_tracker/history");
             request.Method = "POST";
             request.Timeout = 10000;
             request.ReadWriteTimeout = 10000;
