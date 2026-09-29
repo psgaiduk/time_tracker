@@ -94,7 +94,7 @@ namespace TimeTracker.Classic.Presentation
             TimerPhase phase = _coordinator.State.Phase;
             if (_lastPhase == TimerPhase.Idle && phase == TimerPhase.Work)
                 UploadHistory(_clock.Now.Date);
-            else if (IsBreak(phase) || phase == TimerPhase.Idle && _lastPhase != TimerPhase.Idle)
+            else if (IsBreak(phase) && !IsBreak(_lastPhase) || phase == TimerPhase.Idle && _lastPhase != TimerPhase.Idle)
                 UploadHistory(_clock.Now.Date);
             _lastPhase = phase;
             UpdateTrayStatus();
