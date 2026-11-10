@@ -39,6 +39,7 @@ namespace TimeTracker.Classic.Presentation
         internal static string WorkDayStart { get { return Get("WorkDayStart"); } }
         internal static string WorkDayEnd { get { return Get("WorkDayEnd"); } }
         internal static string AutomaticMeetingEnabled { get { return Get("AutomaticMeetingEnabled"); } }
+        internal static string MeetingProcessCount { get { return Get("MeetingProcessCount"); } }
         internal static string AddRunningApplication { get { return Get("AddRunningApplication"); } }
         internal static string ChooseExecutable { get { return Get("ChooseExecutable"); } }
         internal static string Remove { get { return Get("Remove"); } }

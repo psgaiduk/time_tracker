@@ -32,6 +32,13 @@ namespace TimeTracker.Classic.Infrastructure
                 if (pair[0] == "WorkDayStart" && TimeSpan.TryParse(pair[1], out time)) { result.WorkDayStart = time; continue; }
                 if (pair[0] == "WorkDayEnd" && TimeSpan.TryParse(pair[1], out time)) { result.WorkDayEnd = time; continue; }
                 if (pair[0] == "AutomaticMeetingApplication") { if (!String.IsNullOrWhiteSpace(pair[1])) result.AutomaticMeetingApplications.Add(pair[1]); continue; }
+                if (pair[0] == "AutomaticMeetingProcessCount")
+                {
+                    string[] parts = pair[1].Split(new[] { '|' }, 2);
+                    int count;
+                    if (parts.Length == 2 && Int32.TryParse(parts[0], out count) && count > 0 && !String.IsNullOrWhiteSpace(parts[1])) result.AutomaticMeetingProcessCounts[parts[1]] = count;
+                    continue;
+                }
                 bool value;
                 if (!Boolean.TryParse(pair[1], out value)) continue;
                 if (pair[0] == "HideOverlayFromCapture") result.HideOverlayFromCapture = value;
@@ -58,7 +65,11 @@ namespace TimeTracker.Classic.Infrastructure
                 "HistoryApiToken=" + (settings.HistoryApiToken ?? String.Empty),
                 "AutomaticMeetingEnabled=" + settings.AutomaticMeetingEnabled
             });
-            foreach (string path in settings.AutomaticMeetingApplications) lines.Add("AutomaticMeetingApplication=" + path);
+            foreach (string path in settings.AutomaticMeetingApplications)
+            {
+                lines.Add("AutomaticMeetingApplication=" + path);
+                lines.Add("AutomaticMeetingProcessCount=" + settings.GetMeetingProcessCount(path) + "|" + path);
+            }
             File.WriteAllLines(_path, lines.ToArray());
         }
     }

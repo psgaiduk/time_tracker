@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using TimeTracker.Classic.Application;
 
@@ -20,12 +21,15 @@ namespace TimeTracker.Classic.Presentation
         private readonly IApplicationCatalog _applicationCatalog;
         private readonly CheckBox _automaticMeetingEnabled;
         private readonly ListBox _automaticMeetingApplications;
+        private readonly NumericUpDown _meetingProcessCount;
+        private readonly Dictionary<string, int> _meetingProcessCounts;
 
         internal SettingsForm(AppSettings settings, IApplicationCatalog applicationCatalog)
         {
             _applicationCatalog = applicationCatalog;
+            _meetingProcessCounts = new Dictionary<string, int>(settings.AutomaticMeetingProcessCounts, StringComparer.OrdinalIgnoreCase);
             Text = "Настройки Time Tracker";
-            ClientSize = new Size(570, 625);
+            ClientSize = new Size(570, 660);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -50,15 +54,31 @@ namespace TimeTracker.Classic.Presentation
             _automaticMeetingEnabled = new CheckBox { Left = 20, Top = 350, Width = 500, Text = LocalizedText.AutomaticMeetingEnabled, Checked = settings.AutomaticMeetingEnabled };
             _automaticMeetingApplications = new ListBox { Left = 40, Top = 380, Width = 510, Height = 120 };
             foreach (string path in settings.AutomaticMeetingApplications) _automaticMeetingApplications.Items.Add(path);
+            Label processCountLabel = new Label { Left = 40, Top = 545, Width = 330, Text = LocalizedText.MeetingProcessCount };
+            _meetingProcessCount = new NumericUpDown { Left = 380, Top = 542, Width = 80, Minimum = 1, Maximum = 1000, Enabled = false, AccessibleName = LocalizedText.MeetingProcessCount };
+            _automaticMeetingApplications.SelectedIndexChanged += delegate
+            {
+                string path = _automaticMeetingApplications.SelectedItem as string;
+                _meetingProcessCount.Enabled = path != null;
+                int count;
+                _meetingProcessCount.Value = path != null && _meetingProcessCounts.TryGetValue(path, out count) ? Math.Max(1, Math.Min(1000, count)) : 1;
+            };
+            _meetingProcessCount.ValueChanged += delegate
+            {
+                string path = _automaticMeetingApplications.SelectedItem as string;
+                if (path != null) _meetingProcessCounts[path] = (int)_meetingProcessCount.Value;
+            };
             Button addRunning = new Button { Left = 40, Top = 510, Width = 160, Text = LocalizedText.AddRunningApplication };
             Button addExecutable = new Button { Left = 210, Top = 510, Width = 150, Text = LocalizedText.ChooseExecutable };
             Button remove = new Button { Left = 370, Top = 510, Width = 100, Text = LocalizedText.Remove };
             addRunning.Click += delegate { AddRunningApplication(); };
             addExecutable.Click += delegate { AddExecutable(); };
             remove.Click += delegate { if (_automaticMeetingApplications.SelectedIndex >= 0) _automaticMeetingApplications.Items.RemoveAt(_automaticMeetingApplications.SelectedIndex); };
-            Button save = new Button { Left = 380, Top = 575, Width = 85, Text = "Сохранить", DialogResult = DialogResult.OK };
-            Button cancel = new Button { Left = 475, Top = 575, Width = 75, Text = "Отмена", DialogResult = DialogResult.Cancel };
+            Button save = new Button { Left = 380, Top = 610, Width = 85, Text = "Сохранить", DialogResult = DialogResult.OK };
+            Button cancel = new Button { Left = 475, Top = 610, Width = 75, Text = "Отмена", DialogResult = DialogResult.Cancel };
             Controls.AddRange(new Control[] { _hideFromCapture, _showOnAllVirtualDesktops, _startWithWindows, startLabel, _workDayStart, endLabel, _workDayEnd, _workSummaryEnabled, urlLabel, _workSummaryUrl, apiLabel, _historyApiUrl, userIdLabel, _userId, tokenLabel, _apiToken, _automaticMeetingEnabled, _automaticMeetingApplications, addRunning, addExecutable, remove, save, cancel });
+            Controls.Add(processCountLabel);
+            Controls.Add(_meetingProcessCount);
             AcceptButton = save;
             CancelButton = cancel;
         }
@@ -77,7 +97,13 @@ namespace TimeTracker.Classic.Presentation
             settings.HistoryApiToken = _apiToken.Text.Trim();
             settings.AutomaticMeetingEnabled = _automaticMeetingEnabled.Checked;
             settings.AutomaticMeetingApplications.Clear();
+            settings.AutomaticMeetingProcessCounts.Clear();
             foreach (object item in _automaticMeetingApplications.Items) settings.AutomaticMeetingApplications.Add(item.ToString());
+            foreach (string path in settings.AutomaticMeetingApplications)
+            {
+                int count;
+                if (_meetingProcessCounts.TryGetValue(path, out count)) settings.AutomaticMeetingProcessCounts[path] = count;
+            }
         }
 
         private static DateTimePicker CreateTimePicker(TimeSpan value, int left, int top)

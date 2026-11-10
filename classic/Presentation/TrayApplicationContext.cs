@@ -78,7 +78,7 @@ namespace TimeTracker.Classic.Presentation
             _foregroundTimer = new Timer { Interval = 1000 };
             _foregroundTimer.Tick += delegate
             {
-                _coordinator.UpdateAutomaticMeeting(_settings.IsAutomaticMeetingApplication(_foregroundApplication.GetExecutablePath()));
+                _coordinator.UpdateAutomaticMeeting(_settings.HasAutomaticMeeting(_settings.AutomaticMeetingEnabled ? _applicationCatalog.GetRunningProcessPaths() : new string[0]));
                 UpdateUserInactivity();
                 UploadScheduledHistory(_clock.Now);
             };

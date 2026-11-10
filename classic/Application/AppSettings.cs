@@ -18,6 +18,7 @@ namespace TimeTracker.Classic.Application
             UserId = String.Empty;
             HistoryApiToken = String.Empty;
             AutomaticMeetingApplications = new List<string>();
+            AutomaticMeetingProcessCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         }
 
         internal bool HideOverlayFromCapture { get; set; }
@@ -32,6 +33,26 @@ namespace TimeTracker.Classic.Application
         internal string HistoryApiToken { get; set; }
         internal bool AutomaticMeetingEnabled { get; set; }
         internal List<string> AutomaticMeetingApplications { get; private set; }
+        internal Dictionary<string, int> AutomaticMeetingProcessCounts { get; private set; }
+
+        internal int GetMeetingProcessCount(string path)
+        {
+            int count;
+            return AutomaticMeetingProcessCounts.TryGetValue(path, out count) && count > 0 ? count : 1;
+        }
+
+        internal bool HasAutomaticMeeting(IList<string> processes)
+        {
+            if (!AutomaticMeetingEnabled) return false;
+            foreach (string path in AutomaticMeetingApplications)
+            {
+                int count = 0;
+                foreach (string process in processes)
+                    if (String.Equals(path, process, StringComparison.OrdinalIgnoreCase)) count++;
+                if (count >= GetMeetingProcessCount(path)) return true;
+            }
+            return false;
+        }
 
         internal bool IsAutomaticMeetingApplication(string executablePath)
         {

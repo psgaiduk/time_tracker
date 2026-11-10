@@ -5,5 +5,6 @@ namespace TimeTracker.Classic.Application
     internal interface IApplicationCatalog
     {
         IList<ApplicationChoice> GetRunningApplications();
+        IList<string> GetRunningProcessPaths();
     }
 }

@@ -7,6 +7,18 @@ namespace TimeTracker.Classic.Infrastructure
 {
     internal sealed class WindowsApplicationCatalog : IApplicationCatalog
     {
+        public IList<string> GetRunningProcessPaths()
+        {
+            List<string> result = new List<string>();
+            foreach (Process process in Process.GetProcesses())
+            {
+                try { result.Add(process.MainModule.FileName); }
+                catch (Exception) { }
+                finally { process.Dispose(); }
+            }
+            return result;
+        }
+
         public IList<ApplicationChoice> GetRunningApplications()
         {
             List<ApplicationChoice> result = new List<ApplicationChoice>();

@@ -27,7 +27,8 @@
   <data name="NextDay" xml:space="preserve"><value>Next day</value></data>
   <data name="WorkDayStart" xml:space="preserve"><value>Work day start:</value></data>
   <data name="WorkDayEnd" xml:space="preserve"><value>Work day end:</value></data>
-  <data name="AutomaticMeetingEnabled" xml:space="preserve"><value>Automatically enable Meeting for active applications</value></data>
+  <data name="AutomaticMeetingEnabled" xml:space="preserve"><value>Automatically detect meetings by application processes</value></data>
+  <data name="MeetingProcessCount" xml:space="preserve"><value>Minimum number of processes:</value></data>
   <data name="AddRunningApplication" xml:space="preserve"><value>Add running</value></data>
   <data name="ChooseExecutable" xml:space="preserve"><value>Choose EXE</value></data>
   <data name="Remove" xml:space="preserve"><value>Remove</value></data>

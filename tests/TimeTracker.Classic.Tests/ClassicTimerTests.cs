@@ -60,9 +60,10 @@ namespace TimeTracker.Classic.Tests
                 WorkDaySummaryForm_ShowsOneCombinedRestRow();
                 WorkDayReportText_FormatsClipboardText();
                 TrayIcon_Meeting_IsPurpleAndShowsContinuousMinutes();
-                AutomaticMeeting_OnlyStartsAndDoesNotStopOnForegroundChange();
+                AutomaticMeeting_StartsAndStopsWhenWindowsChange();
                 AutomaticMeeting_DoesNotEndManualMeeting();
                 AppSettings_AutomaticMeeting_MatchesExecutablePathIgnoringCase();
+                AutomaticMeeting_RequiresConfiguredProcessCount();
                 Console.WriteLine("Classic timer tests passed.");
                 return 0;
             }
@@ -674,7 +675,7 @@ namespace TimeTracker.Classic.Tests
             AssertEqual(System.Drawing.Color.MediumPurple, TrayIconRenderer.GetBackgroundColor(state), "Meeting tray color");
         }
 
-        private static void AutomaticMeeting_OnlyStartsAndDoesNotStopOnForegroundChange()
+        private static void AutomaticMeeting_StartsAndStopsWhenWindowsChange()
         {
             DateTime start = new DateTime(2026, 8, 26, 9, 0, 0);
             TimerCoordinator coordinator = new TimerCoordinator(new FakeClock(start), TimerRules.Default(), new FakeHistoryStore());
@@ -682,7 +683,7 @@ namespace TimeTracker.Classic.Tests
             coordinator.UpdateAutomaticMeeting(true);
             AssertEqual(TimerPhase.Meeting, coordinator.State.Phase, "Selected foreground app starts meeting");
             coordinator.UpdateAutomaticMeeting(false);
-            AssertEqual(TimerPhase.Meeting, coordinator.State.Phase, "Leaving selected app keeps meeting active");
+            AssertEqual(TimerPhase.Work, coordinator.State.Phase, "Closing meeting windows returns to work");
         }
 
         private static void AutomaticMeeting_DoesNotEndManualMeeting()
@@ -703,6 +704,19 @@ namespace TimeTracker.Classic.Tests
             AssertEqual(true, settings.IsAutomaticMeetingApplication(@"c:\apps\TEAMS.EXE"), "Executable path match ignores case");
             settings.AutomaticMeetingEnabled = false;
             AssertEqual(false, settings.IsAutomaticMeetingApplication(@"C:\Apps\Teams.exe"), "Disabled automatic meeting does not match");
+        }
+
+        private static void AutomaticMeeting_RequiresConfiguredProcessCount()
+        {
+            AppSettings settings = new AppSettings();
+            settings.AutomaticMeetingEnabled = true;
+            settings.AutomaticMeetingApplications.Add(@"C:\Apps\Meet.exe");
+            settings.AutomaticMeetingProcessCounts[@"C:\Apps\Meet.exe"] = 2;
+            AssertEqual(false, settings.HasAutomaticMeeting(new string[0]), "No processes");
+            AssertEqual(false, settings.HasAutomaticMeeting(new[] { @"c:\apps\meet.exe" }), "One process");
+            AssertEqual(true, settings.HasAutomaticMeeting(new[] { @"c:\apps\meet.exe", @"C:\Apps\Meet.exe" }), "Two processes");
+            settings.AutomaticMeetingEnabled = false;
+            AssertEqual(false, settings.HasAutomaticMeeting(new[] { @"C:\Apps\Meet.exe", @"C:\Apps\Meet.exe" }), "Disabled detection");
         }
 
         private sealed class FakeClock : IClock

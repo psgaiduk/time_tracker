@@ -15,6 +15,7 @@ namespace TimeTracker.Classic.Application
         private TimerPhase _breakPhase;
         private TimeSpan _plannedBreakDuration;
         private ActivityKind _currentActivityKind;
+        private bool _automaticMeeting;
 
         internal TimerCoordinator(IClock clock, TimerRules rules, IWorkHistoryStore history)
         {
@@ -46,6 +47,7 @@ namespace TimeTracker.Classic.Application
         internal void ToggleMeeting()
         {
             DateTime now = _clock.Now;
+            _automaticMeeting = false;
             if (_session.GetState(now).Phase == TimerPhase.Work)
             {
                 _session.StartMeeting(now);
@@ -67,9 +69,19 @@ namespace TimeTracker.Classic.Application
             {
                 DateTime now = _clock.Now;
                 _session.StartMeeting(now);
+                _automaticMeeting = true;
                 SwitchActivity(now, ActivityKind.Meeting);
                 Publish();
             }
+            else if (!selectedApplicationIsActive && phase == TimerPhase.Meeting && _automaticMeeting)
+            {
+                DateTime now = _clock.Now;
+                _automaticMeeting = false;
+                _session.EndMeeting(now);
+                SwitchActivity(now, ActivityKind.Work);
+                Publish();
+            }
+            else if (phase != TimerPhase.Meeting) _automaticMeeting = false;
         }
 
         internal void Rest()
